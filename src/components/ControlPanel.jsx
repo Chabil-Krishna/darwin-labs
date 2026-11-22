@@ -6,14 +6,6 @@ import {
   Zap, Users, Ruler, Shuffle, Dna, Shield, Gauge, Target, Timer
 } from 'lucide-react';
 
-const SPEED_LABELS = {
-  1: '10s Time-Lapse',
-  2: '5s Slow',
-  3: '2s Medium',
-  4: '0.7s Fast',
-  5: '0.15s Blazing',
-};
-
 export default function ControlPanel({
   params, updateParams, playing, speed, setSpeed,
   timeRemaining, totalTime,
@@ -163,55 +155,22 @@ export default function ControlPanel({
         <div className="mt-3.5 pt-3 border-t border-orange-100">
           <div className="flex items-center justify-between text-xs mb-1.5">
             <span className="text-stone-600 flex items-center gap-1"><Gauge size={12} className="text-orange-500" /> Step Interval</span>
-            <span className="font-bold text-orange-600">{SPEED_LABELS[speed]}</span>
+            <span className="font-bold text-orange-600 font-mono">{speed}s</span>
           </div>
           <input
             type="range"
-            min={1}
-            max={5}
+            min={5}
+            max={10}
+            step={1}
             value={speed}
             onChange={(e) => setSpeed(Number(e.target.value))}
             className="w-full accent-orange-500 h-1.5 rounded-full appearance-none bg-orange-100 cursor-pointer
             [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
             [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-orange-500 [&::-webkit-slider-thumb]:shadow-md"
           />
-
-          {/* Quick Preset Buttons */}
-          <div className="flex gap-1.5 mt-2.5">
-            <button
-              type="button"
-              onClick={() => setSpeed(1)}
-              className={`flex-1 py-1.5 px-2 rounded-md text-[11px] font-bold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                speed === 1
-                  ? 'bg-orange-500 border-orange-500 text-white shadow-xs'
-                  : 'bg-white border-orange-200 text-orange-800 hover:bg-orange-50'
-              }`}
-            >
-              <Timer size={12} className="shrink-0" />
-              10s Time-Lapse
-            </button>
-            <button
-              type="button"
-              onClick={() => setSpeed(3)}
-              className={`py-1.5 px-2.5 rounded-md text-[11px] font-medium border transition-all cursor-pointer ${
-                speed === 3
-                  ? 'bg-orange-500 border-orange-500 text-white shadow-xs'
-                  : 'bg-white border-orange-200 text-orange-800 hover:bg-orange-50'
-              }`}
-            >
-              2s
-            </button>
-            <button
-              type="button"
-              onClick={() => setSpeed(5)}
-              className={`py-1.5 px-2.5 rounded-md text-[11px] font-medium border transition-all cursor-pointer ${
-                speed === 5
-                  ? 'bg-orange-500 border-orange-500 text-white shadow-xs'
-                  : 'bg-white border-orange-200 text-orange-800 hover:bg-orange-50'
-              }`}
-            >
-              Fast
-            </button>
+          <div className="flex justify-between text-[10px] text-stone-500 mt-1 font-mono">
+            <span>5s (Faster)</span>
+            <span>10s (Slower)</span>
           </div>
         </div>
 

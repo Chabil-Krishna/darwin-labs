@@ -13,12 +13,16 @@ import {
 const PHASES = ['idle', 'evaluate', 'select', 'crossover', 'mutate', 'replace'];
 
 export const SPEED_MAP = {
-  1: 10000, // 10s Time-Lapse (as requested)
-  2: 5000,  // 5s Slow
-  3: 2000,  // 2s Medium
-  4: 700,   // 0.7s Fast
-  5: 150,   // 0.15s Blazing
+  5: 5000,
+  6: 6000,
+  7: 7000,
+  8: 8000,
+  9: 9000,
+  10: 10000,
+  1: 10000,
 };
+
+const getIntervalMs = (s) => (s >= 5 && s <= 10 ? s * 1000 : (SPEED_MAP[s] || 10000));
 
 const initialState = {
   population: [],
@@ -48,8 +52,8 @@ export default function useGAEngine() {
     target: 'HELLO',
   });
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1); // 1 = 10,000ms (10s time-lapse default)
-  const [timeRemaining, setTimeRemaining] = useState(SPEED_MAP[1]);
+  const [speed, setSpeed] = useState(10); // 10s default (ranges 10s to 5s)
+  const [timeRemaining, setTimeRemaining] = useState(10000);
   const timerRef = useRef(null);
 
   const getEffectiveChrLen = useCallback(() => {
@@ -319,14 +323,14 @@ export default function useGAEngine() {
   // Reset countdown when speed changes or paused
   useEffect(() => {
     if (!playing) {
-      setTimeRemaining(SPEED_MAP[speed]);
+      setTimeRemaining(getIntervalMs(speed));
     }
   }, [speed, playing]);
 
   // ---- Play / Pause with 100ms countdown tick ----
   useEffect(() => {
     if (playing) {
-      const intervalMs = SPEED_MAP[speed];
+      const intervalMs = getIntervalMs(speed);
       const tickMs = 100;
       let currentLeft = intervalMs;
       setTimeRemaining(intervalMs);
@@ -356,7 +360,7 @@ export default function useGAEngine() {
   const reset = useCallback(() => {
     setPlaying(false);
     setState(initialState);
-    setTimeRemaining(SPEED_MAP[speed]);
+    setTimeRemaining(getIntervalMs(speed));
   }, [speed]);
 
   const updateParams = useCallback(
@@ -364,7 +368,7 @@ export default function useGAEngine() {
       setPlaying(false);
       setParams((prev) => ({ ...prev, ...updates }));
       setState(initialState);
-      setTimeRemaining(SPEED_MAP[speed]);
+      setTimeRemaining(getIntervalMs(speed));
     },
     [speed]
   );
@@ -376,7 +380,7 @@ export default function useGAEngine() {
     speed,
     setSpeed,
     timeRemaining,
-    totalTime: SPEED_MAP[speed],
+    totalTime: getIntervalMs(speed),
     step,
     play,
     pause,
