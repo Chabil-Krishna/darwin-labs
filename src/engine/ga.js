@@ -21,7 +21,7 @@ export const PROBLEMS = {
     name: 'f(x) = x²',
     subtitle: 'Binary-encoded function maximization',
     description:
-      "Maximize f(x) = x² where x is a binary-encoded integer. This is Goldberg's (1989) classic textbook example. The GA must discover the binary representation of the largest possible integer.",
+      'Maximize f(x) = x² where x is a binary-encoded integer. The GA must discover the binary representation of the largest possible integer.',
     alleles: ['0', '1'],
     randomGene: () => (Math.random() < 0.5 ? '1' : '0'),
     fitness: (chr) => {
@@ -320,8 +320,8 @@ export function computeGeneFrequencies(population, alleles) {
   return freq;
 }
 
-// ---- Textbook Example (Goldberg 1989) ----
-export function runGoldbergExample() {
+// ---- Textbook Example (f(x) = x²) ----
+export function runTextbookExample() {
   const pop = [
     ['0', '1', '1', '0', '1'], // x=13
     ['1', '1', '0', '0', '0'], // x=24
@@ -344,14 +344,34 @@ export function runGoldbergExample() {
     { parents: [2, 3], point: 2 },
   ];
 
-  const offspring = [];
+  const postCrossover = [];
   crossovers.forEach(({ parents: [p1, p2], point }) => {
     const c1 = [...pop[p1].slice(0, point), ...pop[p2].slice(point)];
     const c2 = [...pop[p2].slice(0, point), ...pop[p1].slice(point)];
-    offspring.push(c1, c2);
+    postCrossover.push(c1, c2);
   });
 
-  const newFitnesses = offspring.map(fitness);
+  // Bit mutation:
+  // Offspring 1 (O1): no mutation -> [0, 1, 1, 0, 0] (x=12, f(x)=144)
+  // Offspring 2 (O2): bit 2 ('0' -> '1') -> [1, 1, 1, 0, 1] (x=29, f(x)=841)
+  // Offspring 3 (O3): no mutation -> [0, 1, 0, 1, 1] (x=11, f(x)=121)
+  // Offspring 4 (O4): bit 4 ('0' -> '1') -> [1, 0, 0, 0, 1] (x=17, f(x)=289)
+  const mutations = [
+    { childIdx: 0, mutatedBits: [] },
+    { childIdx: 1, mutatedBits: [2] },
+    { childIdx: 2, mutatedBits: [] },
+    { childIdx: 3, mutatedBits: [4] },
+  ];
+
+  const finalOffspring = postCrossover.map((chr, i) => {
+    const mutated = [...chr];
+    mutations[i].mutatedBits.forEach((bitPos) => {
+      mutated[bitPos] = mutated[bitPos] === '1' ? '0' : '1';
+    });
+    return mutated;
+  });
+
+  const newFitnesses = finalOffspring.map(fitness);
   const newTotal = newFitnesses.reduce((a, b) => a + b, 0);
 
   return {
@@ -368,21 +388,32 @@ export function runGoldbergExample() {
       parent2: { idx: p2, chr: pop[p2], x: decode(pop[p2]) },
       point,
       child1: {
-        chr: offspring[i * 2],
-        x: decode(offspring[i * 2]),
-        fitness: fitness(offspring[i * 2]),
+        chr: postCrossover[i * 2],
+        x: decode(postCrossover[i * 2]),
+        fitness: fitness(postCrossover[i * 2]),
       },
       child2: {
-        chr: offspring[i * 2 + 1],
-        x: decode(offspring[i * 2 + 1]),
-        fitness: fitness(offspring[i * 2 + 1]),
+        chr: postCrossover[i * 2 + 1],
+        x: decode(postCrossover[i * 2 + 1]),
+        fitness: fitness(postCrossover[i * 2 + 1]),
       },
     })),
-    newPop: offspring.map((c, i) => ({
+    mutations: mutations.map(({ childIdx, mutatedBits }) => ({
+      childIdx,
+      beforeChr: postCrossover[childIdx],
+      afterChr: finalOffspring[childIdx],
+      mutatedBits,
+      beforeX: decode(postCrossover[childIdx]),
+      afterX: decode(finalOffspring[childIdx]),
+      beforeFitness: fitness(postCrossover[childIdx]),
+      afterFitness: fitness(finalOffspring[childIdx]),
+    })),
+    newPop: finalOffspring.map((c, i) => ({
       chr: c,
       binary: c.join(''),
       x: decode(c),
       fitness: newFitnesses[i],
+      mutatedBits: mutations[i].mutatedBits,
     })),
     newTotalFitness: newTotal,
     oldAvg: totalFit / 4,

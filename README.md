@@ -10,7 +10,7 @@ Inspired by DSA visualizers like [VisuAlgo](https://visualgo.net/en/), Darwin La
 
 ### 1. Multi-Problem Sandbox
 - **OneMax Problem**: Maximize the number of `1`s in a binary bit-string (classic GA benchmark).
-- **Function Maximization (f(x) = x^2)**: Binary-encoded integer optimization directly from Goldberg (1989).
+- **Function Maximization (f(x) = x^2)**: Binary-encoded integer optimization.
 - **Target String Evolution**: Evolve a population from random letters toward any custom target phrase (e.g., `"HELLO"` or `"DARWIN"`).
 
 ### 2. Full Transport Controls
@@ -22,7 +22,7 @@ Inspired by DSA visualizers like [VisuAlgo](https://visualgo.net/en/), Darwin La
 - **Chromosome Length** (4 to 16 genes)
 - **Crossover Rate** (0.00 to 1.00)
 - **Mutation Rate** (0.00 to 0.50)
-- **Selection Operator**: Roulette Wheel (Fitness Proportionate), Tournament (k=3), or Rank-based
+- **Selection Operator**: Roulette Wheel (Fitness Proportionate) or Tournament (k=2)
 - **Generational Replacement**: Standard generational replacement conforming to core curriculum syllabi.
 
 ### 4. Interactive Visualizations and Analytics
@@ -30,7 +30,7 @@ Inspired by DSA visualizers like [VisuAlgo](https://visualgo.net/en/), Darwin La
 - **Fitness Chart**: High-resolution area and line chart tracking Best, Average, and Worst fitness across generations using Recharts.
 - **Gene Pool Heatmap**: Real-time allele frequency distribution across all chromosome positions (loci) to inspect genetic drift and locus locking.
 - **Diversity Metric**: Tracking unique population genotypes to observe search-space exploration vs. premature convergence.
-- **Textbook Verification**: Complete step-by-step walkthrough reproducing David E. Goldberg's classic 1989 hand calculation with verified arithmetic proof.
+- **Textbook Verification**: Complete step-by-step walkthrough reproducing the classic f(x) = x² hand calculation with verified arithmetic proof.
 
 ---
 

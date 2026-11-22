@@ -51,7 +51,7 @@ const TABS = [
     icon: BookOpen,
     align: 'right',
     title: 'Textbook Column',
-    tooltip: 'Interactive step-by-step verification of David E. Goldberg\'s classic (1989) f(x) = x² hand calculation with verified arithmetic at every step.',
+    tooltip: 'Interactive step-by-step verification of the classic f(x) = x² hand calculation with verified arithmetic at every step.',
   },
 ];
 
