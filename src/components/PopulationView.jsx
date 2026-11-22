@@ -29,7 +29,7 @@ export default function PopulationView({ state, params }) {
             align="left"
             position="bottom"
           />
-          {totalFitness > 0 && (
+          {totalFitness > 0 && params.selection !== 'tournament' && (
             <span className="ml-1.5 font-mono text-[10px] font-normal text-stone-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-200">
               Total Fitness Σf = <b className="text-orange-950">{totalFitness}</b>
             </span>
@@ -88,7 +88,25 @@ export default function PopulationView({ state, params }) {
                 </>
               )}
               {badge}
-              {isSelected && totalFitness > 0 && (
+              {isSelected && params.selection === 'tournament' && (
+                <span
+                  title={spins
+                    .map(
+                      (s) =>
+                        `Match #${s.slotNum || s.spinNum}: Chr ${s.competitors?.[0]} (f=${s.competitorFitnesses?.[0]}) vs Chr ${s.competitors?.[1]} (f=${s.competitorFitnesses?.[1]}) → Winner`
+                    )
+                    .join('\n')}
+                  className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-mono bg-amber-100 text-amber-950 border border-amber-300 shrink-0 font-medium cursor-help"
+                >
+                  <span className="text-amber-900 font-bold">
+                    {spins.length > 1 ? `Won ${spins.length}× Tournaments` : 'Won Tournament'}
+                  </span>
+                  <span className="text-amber-700 text-[9px] font-sans">
+                    (Match {spins.map((s) => `#${s.slotNum || s.spinNum}`).join(', ')})
+                  </span>
+                </span>
+              )}
+              {isSelected && params.selection !== 'tournament' && totalFitness > 0 && (
                 <span
                   title={
                     spins.length > 0
@@ -139,24 +157,47 @@ export default function PopulationView({ state, params }) {
       {state.selectedPool && state.selectedPool.length > 0 && !showOffspring && (
         <div className="mt-3 p-2.5 rounded-lg bg-amber-50/90 border border-amber-200">
           <div className="flex items-center justify-between text-xs font-bold text-amber-950 mb-2">
-            <span>Mating Pool ({state.selectedPool.length} roulette wheel spins)</span>
+            <span>
+              {params.selection === 'tournament'
+                ? `Mating Pool (${state.selectedPool.length} tournament matches, size k=2)`
+                : `Mating Pool (${state.selectedPool.length} roulette wheel spins)`}
+            </span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {state.selectedPool.map((s) => (
               <div
-                key={`spin-card-${s.spinNum}`}
+                key={`pool-card-${s.slotNum || s.spinNum}`}
                 className="bg-white/95 px-2 py-1.5 rounded border border-amber-200 shadow-2xs font-mono text-[10px] flex flex-col gap-0.5"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-stone-500 font-semibold">Spin #{s.spinNum}</span>
-                  <span className="text-orange-700 font-bold bg-orange-50 px-1 rounded border border-orange-200">Chr {s.idx}</span>
-                </div>
-                <div className="text-stone-700 truncate">
-                  r = <span className="font-bold text-stone-900">{(s.r * 100).toFixed(1)}%</span>
-                </div>
-                <div className="text-[9px] text-amber-800">
-                  cum {(s.cumProb * 100).toFixed(1)}% &ge; r
-                </div>
+                {params.selection === 'tournament' ? (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-stone-500 font-semibold">Match #{s.slotNum || s.spinNum}</span>
+                      <span className="text-orange-700 font-bold bg-orange-50 px-1 rounded border border-orange-200">
+                        Winner: Chr {s.idx}
+                      </span>
+                    </div>
+                    <div className="text-stone-700 text-[9px] truncate">
+                      Chr {s.competitors?.[0]} (f={s.competitorFitnesses?.[0]}) vs Chr {s.competitors?.[1]} (f={s.competitorFitnesses?.[1]})
+                    </div>
+                    <div className="text-[9px] text-amber-800 font-medium">
+                      f(x)={state.fitnesses[s.idx]} &ge; f(x)={s.competitorFitnesses?.[0] === state.fitnesses[s.idx] ? s.competitorFitnesses?.[1] : s.competitorFitnesses?.[0]}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-stone-500 font-semibold">Spin #{s.spinNum}</span>
+                      <span className="text-orange-700 font-bold bg-orange-50 px-1 rounded border border-orange-200">Chr {s.idx}</span>
+                    </div>
+                    <div className="text-stone-700 truncate">
+                      r = <span className="font-bold text-stone-900">{(s.r * 100).toFixed(1)}%</span>
+                    </div>
+                    <div className="text-[9px] text-amber-800">
+                      cum {(s.cumProb * 100).toFixed(1)}% &ge; r
+                    </div>
+                  </>
+                )}
               </div>
             ))}
           </div>

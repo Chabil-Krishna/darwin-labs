@@ -131,17 +131,42 @@ export function rouletteSelect(fitnesses) {
   return rouletteSelectWithDetails(fitnesses).idx;
 }
 
-export function tournamentSelect(fitnesses, k = 3) {
-  let best = -1;
-  let bestFit = -Infinity;
+export function tournamentSelectWithDetails(fitnesses, k = 2) {
+  const competitors = [];
   for (let i = 0; i < k; i++) {
-    const idx = Math.floor(Math.random() * fitnesses.length);
-    if (fitnesses[idx] > bestFit) {
-      bestFit = fitnesses[idx];
-      best = idx;
+    let idx = Math.floor(Math.random() * fitnesses.length);
+    let tries = 0;
+    while (competitors.includes(idx) && fitnesses.length > 1 && tries < 10) {
+      idx = Math.floor(Math.random() * fitnesses.length);
+      tries++;
+    }
+    competitors.push(idx);
+  }
+
+  let winner = competitors[0];
+  let bestFit = fitnesses[winner] ?? 0;
+  for (let i = 1; i < competitors.length; i++) {
+    const cand = competitors[i];
+    const candFit = fitnesses[cand] ?? 0;
+    if (candFit > bestFit) {
+      bestFit = candFit;
+      winner = cand;
     }
   }
-  return best;
+
+  return {
+    idx: winner,
+    competitors,
+    competitorFitnesses: competitors.map((ci) => fitnesses[ci] ?? 0),
+    r: null,
+    prob: null,
+    cumProb: null,
+    method: 'tournament',
+  };
+}
+
+export function tournamentSelect(fitnesses, k = 2) {
+  return tournamentSelectWithDetails(fitnesses, k).idx;
 }
 
 export function rankSelect(fitnesses) {
@@ -162,8 +187,7 @@ export function rankSelect(fitnesses) {
 
 export function selectParentWithDetails(fitnesses, method) {
   if (method === 'tournament') {
-    const idx = tournamentSelect(fitnesses);
-    return { idx, r: null, cumProb: null, prob: null, method: 'tournament' };
+    return tournamentSelectWithDetails(fitnesses, 2);
   }
   if (method === 'rank') {
     const idx = rankSelect(fitnesses);

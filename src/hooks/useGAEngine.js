@@ -5,6 +5,7 @@ import {
   evaluatePopulation,
   selectParent,
   selectParentWithDetails,
+  tournamentSelectWithDetails,
   singlePointCrossover,
   singlePointCrossoverWithDetails,
   mutateChromosome,
@@ -172,6 +173,69 @@ export default function useGAEngine() {
         const selectedPool = [];
         const selectionSpins = {};
 
+        if (p.selection === 'tournament') {
+          // Tournament Selection (Binary Tournament: k = 2)
+          // Pick any 2 chromosomes, compare their fitness scores, select the one with greater fitness.
+          // Repeat until the mating pool is filled up to population size.
+          for (let round = 0; round < needed; round++) {
+            const t = tournamentSelectWithDetails(prev.fitnesses, 2);
+            const slotInfo = {
+              slotNum: round + 1,
+              spinNum: round + 1,
+              idx: t.idx,
+              competitors: t.competitors,
+              competitorFitnesses: t.competitorFitnesses,
+              method: 'tournament',
+            };
+            selectedPool.push(slotInfo);
+
+            if (!selectionSpins[t.idx]) {
+              selectionSpins[t.idx] = [];
+            }
+            selectionSpins[t.idx].push(slotInfo);
+          }
+
+          // Form parent pairs from the mating pool for crossover
+          const selected = [];
+          for (let i = 0; i < needed; i += 2) {
+            const p1 = selectedPool[i].idx;
+            const p2 = (i + 1 < needed) ? selectedPool[i + 1].idx : selectedPool[0].idx;
+            selected.push([p1, p2]);
+          }
+
+          const matchLines = selectedPool.map((s) => {
+            const c0 = s.competitors[0];
+            const c1 = s.competitors[1];
+            const f0 = s.competitorFitnesses[0];
+            const f1 = s.competitorFitnesses[1];
+            return `  Match #${s.slotNum}: Chr ${c0} (f(x)=${f0}) vs Chr ${c1} (f(x)=${f1}) → Winner: Chr ${s.idx}`;
+          });
+
+          const pairLines = selected.map((pair, i) => {
+            return `  Pair ${i + 1}: Parent A (Chr ${pair[0]}) × Parent B (Chr ${pair[1]})`;
+          });
+
+          return {
+            ...prev,
+            selected,
+            selectedPool,
+            selectionSpins,
+            phase: 'crossover',
+            stepLog: {
+              stepType: 'select',
+              title: 'Step 3: Selection — Tournament Selection (k=2)',
+              text: `For each of the <b>${needed}</b> mating pool slots, 2 chromosomes were randomly picked. The chromosome with the greater fitness score won each tournament and was placed into the mating pool. Formed <b>${selected.length}</b> parent pairs for crossover.`,
+              details: [
+                `Tournament Selection Rule: Randomly pick 2 chromosomes. Select the one with greater fitness score into the mating pool. Repeat ${needed} times to fill the pool.\n`,
+                `Tournament Matches (${needed} matches):\n` + matchLines.join('\n'),
+                `\nParent Pairs for Crossover:\n` + pairLines.join('\n'),
+              ].join('\n'),
+              phaseColor: 'amber',
+            },
+          };
+        }
+
+        // Roulette Wheel Selection (or Rank)
         const totalF = prev.fitnesses.reduce((a, b) => a + b, 0);
         let cumSum = 0;
         const probs = prev.fitnesses.map((f) => (totalF > 0 ? f / totalF : 0));
@@ -181,17 +245,17 @@ export default function useGAEngine() {
         });
         if (cumProbs.length > 0) cumProbs[cumProbs.length - 1] = 1.0;
 
-        // Spin the roulette wheel exactly popSize times (with replacement)
-        // The same chromosome can be selected multiple times.
         for (let spin = 0; spin < needed; spin++) {
           const s = selectParentWithDetails(prev.fitnesses, p.selection);
           const spinInfo = {
+            slotNum: spin + 1,
             spinNum: spin + 1,
             idx: s.idx,
             r: s.r,
             cumProb: s.cumProb,
             prob: s.prob,
             total: totalF,
+            method: 'roulette',
           };
           selectedPool.push(spinInfo);
 
@@ -201,7 +265,6 @@ export default function useGAEngine() {
           selectionSpins[s.idx].push(spinInfo);
         }
 
-        // Form parent pairs from the mating pool for crossover
         const selected = [];
         for (let i = 0; i < needed; i += 2) {
           const p1 = selectedPool[i].idx;
@@ -209,10 +272,9 @@ export default function useGAEngine() {
           selected.push([p1, p2]);
         }
 
-        const methodNames = { roulette: 'Roulette Wheel', tournament: 'Tournament (k=3)', rank: 'Rank-Based' };
+        const methodNames = { roulette: 'Roulette Wheel', rank: 'Rank-Based' };
         const selectionDesc = {
           roulette: `The roulette wheel is spun exactly <b>${needed}</b> times (equal to population size). Selected with replacement (cumulative probability q &ge; r), so the same chromosome can be selected again and again into the mating pool.`,
-          tournament: `Randomly picks 3 individuals for each of the <b>${needed}</b> mating pool slots, selecting the fittest one each time.`,
           rank: `Chromosomes are ranked by fitness, and <b>${needed}</b> selections are made proportional to rank.`,
         };
 
@@ -241,8 +303,8 @@ export default function useGAEngine() {
           phase: 'crossover',
           stepLog: {
             stepType: 'select',
-            title: `Step 3: Selection — ${methodNames[p.selection]}`,
-            text: selectionDesc[p.selection] + ` Total population fitness Σf = <b>${totalF}</b>. Formed <b>${selected.length}</b> parent pairs for crossover.`,
+            title: `Step 3: Selection — ${methodNames[p.selection] || 'Roulette Wheel'}`,
+            text: (selectionDesc[p.selection] || selectionDesc.roulette) + ` Total population fitness Σf = <b>${totalF}</b>. Formed <b>${selected.length}</b> parent pairs for crossover.`,
             details: [
               `Total Population Fitness (Σf) = ${totalF}`,
               `Cumulative Probability Table:\n` + tableLines.join('\n'),
