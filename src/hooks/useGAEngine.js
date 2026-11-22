@@ -272,10 +272,9 @@ export default function useGAEngine() {
           selected.push([p1, p2]);
         }
 
-        const methodNames = { roulette: 'Roulette Wheel', rank: 'Rank-Based' };
+        const methodNames = { roulette: 'Roulette Wheel' };
         const selectionDesc = {
           roulette: `The roulette wheel is spun exactly <b>${needed}</b> times (equal to population size). Selected with replacement (cumulative probability q &ge; r), so the same chromosome can be selected again and again into the mating pool.`,
-          rank: `Chromosomes are ranked by fitness, and <b>${needed}</b> selections are made proportional to rank.`,
         };
 
         const tableLines = prev.population.map((c, i) => {

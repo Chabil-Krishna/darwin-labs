@@ -104,7 +104,7 @@ export default function ControlPanel({
             <div className="flex items-center justify-between text-xs mb-1">
               <label className="text-stone-700 font-medium flex items-center gap-1">
                 <Shield size={12} className="text-orange-500" /> Selection Method
-                <InfoTooltip text="How parents are chosen based on fitness. Roulette is fitness-proportional, Tournament picks the best from random groups, and Rank balances selection pressure." />
+                <InfoTooltip text="How parents are chosen based on fitness. Roulette is fitness-proportional, and Tournament picks the best between 2 random competitors." />
               </label>
             </div>
             <select
@@ -113,8 +113,7 @@ export default function ControlPanel({
               className="w-full bg-white border border-orange-200 rounded-lg px-3 py-1.5 text-sm text-stone-800 focus:outline-none focus:border-orange-500 cursor-pointer shadow-xs"
             >
               <option value="roulette">Roulette Wheel</option>
-              <option value="tournament">Tournament (k=3)</option>
-              <option value="rank">Rank-Based</option>
+              <option value="tournament">Tournament (k=2)</option>
             </select>
           </div>
         </div>
