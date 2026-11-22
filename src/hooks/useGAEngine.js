@@ -81,7 +81,7 @@ export default function useGAEngine() {
           ...prev,
           phase: 'converged',
           stepLog: {
-            icon: '🎯',
+            stepType: 'converged',
             title: 'Algorithm Converged',
             text: 'The optimal solution has already been achieved. Press <b>Reset</b> to run a new search or adjust parameters.',
             details: prev.stepLog?.details || '',
@@ -108,7 +108,7 @@ export default function useGAEngine() {
           history,
           phase: 'evaluate',
           stepLog: {
-            icon: '🔧',
+            stepType: 'init',
             title: 'Step 1: Initialization',
             text: `Created a random population of <b>${p.popSize}</b> chromosomes, each with <b>${chrLen}</b> genes. Each gene is randomly assigned. This is our starting "gene pool" — the raw material evolution will work with.`,
             details: `Population size = ${p.popSize}\nChromosome length = ${chrLen}\nSearch space = ${problemDef.alleles.length}^${chrLen} = ${BigInt(problemDef.alleles.length) ** BigInt(chrLen)} possible solutions`,
@@ -135,7 +135,7 @@ export default function useGAEngine() {
           phase: converged ? 'converged' : 'select',
           converged,
           stepLog: {
-            icon: converged ? '🎯' : '📊',
+            stepType: converged ? 'converged' : 'eval',
             title: converged ? 'Convergence Achieved: Optimal Solution Found' : 'Step 2: Fitness Evaluation',
             text: converged
               ? `Optimal chromosome found with maximum fitness of <b class="text-orange-600 font-bold">${maxF}</b>. The algorithm has successfully converged!`
@@ -177,7 +177,7 @@ export default function useGAEngine() {
           selected,
           phase: 'crossover',
           stepLog: {
-            icon: '🎯',
+            stepType: 'select',
             title: `Step 3: Selection — ${methodNames[p.selection]}`,
             text: selectionDesc[p.selection] + ` Selected <b>${parentPairs}</b> parent pairs for mating.`,
             details: selected
@@ -227,7 +227,7 @@ export default function useGAEngine() {
           genealogy,
           phase: 'mutate',
           stepLog: {
-            icon: '🔀',
+            stepType: 'cross',
             title: 'Step 4: Crossover (Single-Point)',
             text: `Parent pairs exchange genetic material at a random crossover point. With rate <b>${p.cxRate}</b>, <b>${crossedCount}</b> of <b>${trimmed.length}</b> offspring were created by crossover. Genes before the point come from one parent, after from the other.`,
             details: prev.selected
@@ -269,7 +269,7 @@ export default function useGAEngine() {
           mutatedBitsMap,
           phase: 'replace',
           stepLog: {
-            icon: '⚡',
+            stepType: 'mutate',
             title: 'Step 5: Mutation',
             text: `Each gene has a <b>${(p.mutRate * 100).toFixed(0)}%</b> chance of flipping. <b>${totalMutations}</b> total mutations in <b>${mutatedIndices.length}</b> offspring. Mutation maintains genetic diversity and explores new areas of the search space.`,
             details: details.length > 0 ? details.join('\n\n') : 'No mutations occurred this generation.',
@@ -301,7 +301,7 @@ export default function useGAEngine() {
           phase: converged ? 'converged' : 'evaluate',
           converged,
           stepLog: {
-            icon: converged ? '🎯' : '🔄',
+            stepType: converged ? 'converged' : 'replace',
             title: converged ? `Convergence Achieved — Generation ${generation}` : `Step 6: Replacement — Generation ${generation}!`,
             text: converged
               ? `The new generation produced the optimal solution with maximum fitness <b class="text-orange-600 font-bold">${maxF}</b>! The algorithm has fully converged.`
