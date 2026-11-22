@@ -1,4 +1,4 @@
-import { Dna, FlaskConical, Sparkles } from 'lucide-react';
+import { Dna, FlaskConical } from 'lucide-react';
 
 const PHASE_STYLES = {
   idle: { label: 'Ready', bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
@@ -21,9 +21,8 @@ export default function Header({ generation, phase }) {
             <Dna size={22} className="text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-extrabold tracking-tight flex items-center gap-2 text-stone-900">
+            <h1 className="text-xl font-extrabold tracking-tight text-stone-900">
               Darwin Labs
-              <Sparkles size={16} className="text-orange-500" />
             </h1>
             <p className="text-xs text-orange-800/80 font-medium">
               Interactive Genetic Algorithm Visualizer
