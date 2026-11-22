@@ -7,6 +7,7 @@ export default function PopulationView({ state, params }) {
   const chrLen = params.problem === 'targetstr' ? params.target.length : params.chrLen;
   const target = params.target.split('');
   const showOffspring = state.offspring.length > 0;
+  const totalFitness = (state.fitnesses || []).reduce((sum, f) => sum + (f || 0), 0);
 
   if (state.population.length === 0) {
     return (
@@ -28,6 +29,11 @@ export default function PopulationView({ state, params }) {
             align="left"
             position="bottom"
           />
+          {totalFitness > 0 && (
+            <span className="ml-1.5 font-mono text-[10px] font-normal text-stone-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-200">
+              Total Fitness Σf = <b className="text-orange-950">{totalFitness}</b>
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-500" /> Selected Parent</span>
@@ -40,6 +46,9 @@ export default function PopulationView({ state, params }) {
       <AnimatePresence mode="popLayout">
         {state.population.map((chr, i) => {
           const isSelected = state.selected.flat().includes(i);
+          const fit = state.fitnesses[i] ?? 0;
+          const prob = totalFitness > 0 ? (fit / totalFitness) : 0;
+          const probPercent = (prob * 100).toFixed(1);
 
           let rowStyle = 'bg-orange-50/30 hover:bg-orange-50/70 border border-transparent';
           let badge = null;
@@ -69,6 +78,16 @@ export default function PopulationView({ state, params }) {
               </span>
               <FitnessBar value={state.fitnesses[i]} max={def.maxFitness(chrLen)} />
               {badge}
+              {isSelected && totalFitness > 0 && (
+                <span
+                  title={`Roulette Wheel Selection Probability: p = f_i / Σf = ${fit} / ${totalFitness} = ${(prob * 100).toFixed(2)}%`}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono bg-amber-100 text-amber-950 border border-amber-300 shrink-0 font-medium cursor-help"
+                >
+                  <span className="text-amber-700 font-sans font-semibold">p =</span>
+                  <span className="font-semibold">{fit}/{totalFitness}</span>
+                  <span className="font-bold text-orange-700">({probPercent}%)</span>
+                </span>
+              )}
             </motion.div>
           );
         })}

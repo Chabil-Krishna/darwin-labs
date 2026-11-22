@@ -178,6 +178,8 @@ export default function useGAEngine() {
           rank: 'Chromosomes are ranked by fitness (1=worst, N=best). Selection probability is proportional to rank, preventing dominance by a single super-fit individual.',
         };
 
+        const totalF = prev.fitnesses.reduce((a, b) => a + b, 0);
+
         return {
           ...prev,
           selected,
@@ -185,10 +187,17 @@ export default function useGAEngine() {
           stepLog: {
             stepType: 'select',
             title: `Step 3: Selection — ${methodNames[p.selection]}`,
-            text: selectionDesc[p.selection] + ` Selected <b>${parentPairs}</b> parent pairs for mating.`,
-            details: selected
-              .map((pair, i) => `Pair ${i + 1}: Parent A = Chr ${pair[0]} (fit=${prev.fitnesses[pair[0]]}), Parent B = Chr ${pair[1]} (fit=${prev.fitnesses[pair[1]]})`)
-              .join('\n'),
+            text: selectionDesc[p.selection] + ` Selected <b>${parentPairs}</b> parent pairs for mating. Total fitness Σf = <b>${totalF}</b>.`,
+            details: [
+              `Total Population Fitness (Σf) = ${totalF}`,
+              ...selected.map((pair, i) => {
+                const fA = prev.fitnesses[pair[0]] ?? 0;
+                const fB = prev.fitnesses[pair[1]] ?? 0;
+                const pA = totalF > 0 ? ((fA / totalF) * 100).toFixed(1) : '0.0';
+                const pB = totalF > 0 ? ((fB / totalF) * 100).toFixed(1) : '0.0';
+                return `Pair ${i + 1}:\n  Parent A (Chr ${pair[0]}): f = ${fA}, p = ${fA}/${totalF} = ${pA}%\n  Parent B (Chr ${pair[1]}): f = ${fB}, p = ${fB}/${totalF} = ${pB}%`;
+              }),
+            ].join('\n\n'),
             phaseColor: 'amber',
           },
         };
