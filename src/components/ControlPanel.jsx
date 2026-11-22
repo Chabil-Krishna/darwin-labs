@@ -107,6 +107,16 @@ export default function ControlPanel({
               <option value="tournament">Tournament (k=2)</option>
             </select>
           </div>
+          <Slider
+            icon={<Shield size={12} className="text-orange-500" />}
+            label="Elitism"
+            tooltip="Number of top solutions cloned directly into the next generation without modification. Guarantees that the best fitness never decreases over time."
+            value={params.elitism ?? 1}
+            min={0}
+            max={Math.min(4, Math.floor(params.popSize / 2))}
+            step={1}
+            onChange={(v) => updateParams({ elitism: v })}
+          />
         </div>
       </Card>
 
