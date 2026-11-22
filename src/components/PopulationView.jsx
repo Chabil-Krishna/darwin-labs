@@ -140,9 +140,6 @@ export default function PopulationView({ state, params }) {
         <div className="mt-3 p-2.5 rounded-lg bg-amber-50/90 border border-amber-200">
           <div className="flex items-center justify-between text-xs font-bold text-amber-950 mb-2">
             <span>Mating Pool ({state.selectedPool.length} roulette wheel spins)</span>
-            <span className="text-[10px] text-amber-700 font-normal">
-              Sampled with replacement (same chromosome can be selected multiple times)
-            </span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {state.selectedPool.map((s) => (
