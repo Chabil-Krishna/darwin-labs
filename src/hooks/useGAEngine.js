@@ -55,6 +55,8 @@ export default function useGAEngine() {
   const [speed, setSpeed] = useState(10); // 10s default (ranges 10s to 5s)
   const [timeRemaining, setTimeRemaining] = useState(10000);
   const timerRef = useRef(null);
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   const getEffectiveChrLen = useCallback(() => {
     return params.problem === 'targetstr' ? params.target.length : params.chrLen;
@@ -354,7 +356,13 @@ export default function useGAEngine() {
     if (state.converged) setPlaying(false);
   }, [state.converged]);
 
-  const play = useCallback(() => setPlaying(true), []);
+  const play = useCallback(() => {
+    // If at the beginning of the pipeline (idle), fire the first step immediately
+    if (stateRef.current.phase === 'idle' && !stateRef.current.converged) {
+      step();
+    }
+    setPlaying(true);
+  }, [step]);
   const pause = useCallback(() => setPlaying(false), []);
 
   const reset = useCallback(() => {
