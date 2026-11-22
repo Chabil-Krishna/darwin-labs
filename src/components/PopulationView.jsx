@@ -122,12 +122,12 @@ export default function PopulationView({ state, params }) {
               const isMutated = state.mutatedIndices.includes(i);
               const cp = state.crossoverPoints[i];
               const mutBits = state.mutatedBitsMap?.[i] || [];
+              const cxInfo = state.crossoverDetails?.[i];
+              const mutInfo = state.mutationDetails?.[i];
 
               let rowStyle = 'bg-orange-50/60 border border-orange-200';
-              let badge = null;
               if (isMutated) {
-                rowStyle = 'bg-orange-100 border border-orange-400';
-                badge = <Badge label="Mutated" isMutated />;
+                rowStyle = 'bg-orange-100/90 border border-orange-400';
               }
 
               const fitness = params.problem === 'targetstr'
@@ -149,10 +149,49 @@ export default function PopulationView({ state, params }) {
                     <span>{fitness}</span>
                   </span>
                   <FitnessBar value={fitness} max={def.maxFitness(chrLen)} />
-                  {cp > 0 && (
+
+                  {/* Crossover Details: Random number vs cxRate check and random cut point */}
+                  {cxInfo ? (
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono shrink-0 bg-white/90 border border-orange-200 text-orange-950">
+                      {cxInfo.performed ? (
+                        <>
+                          <span className="text-orange-700 font-bold">cut @{cxInfo.cutPoint}</span>
+                          <span className="text-orange-300">|</span>
+                          <span className="text-stone-700">
+                            r {(cxInfo.r * 100).toFixed(1)}% &lt; {(cxInfo.cxRate * 100).toFixed(0)}%
+                          </span>
+                          <span className="text-orange-600 text-[9px] font-sans font-medium">
+                            (P{cxInfo.parents[0]}×P{cxInfo.parents[1]})
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-stone-600 font-bold">cloned</span>
+                          <span className="text-orange-300">|</span>
+                          <span className="text-stone-600">
+                            r {(cxInfo.r * 100).toFixed(1)}% &ge; {(cxInfo.cxRate * 100).toFixed(0)}%
+                          </span>
+                          <span className="text-stone-500 text-[9px] font-sans">
+                            (from P{cxInfo.sourceParent ?? cxInfo.parents[0]})
+                          </span>
+                        </>
+                      )}
+                    </span>
+                  ) : cp > 0 ? (
                     <span className="text-[10px] text-orange-600 font-bold shrink-0">cut @{cp}</span>
+                  ) : null}
+
+                  {/* Mutation Details: Random number vs mutRate check */}
+                  {isMutated && (
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono bg-orange-200/90 border border-orange-400 text-orange-950 shrink-0">
+                      <span className="font-bold text-orange-900">mutated</span>
+                      <span className="text-orange-400">|</span>
+                      <span>pos {mutBits.join(',')}</span>
+                      <span className="text-orange-800">
+                        (r &lt; {(params.mutRate * 100).toFixed(0)}%)
+                      </span>
+                    </span>
                   )}
-                  {badge}
                 </motion.div>
               );
             })}

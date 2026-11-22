@@ -193,6 +193,32 @@ export function singlePointCrossover(p1, p2) {
   return { children: [c1, c2], point };
 }
 
+export function singlePointCrossoverWithDetails(p1, p2, cxRate) {
+  const r = Math.random();
+  const performed = r < cxRate;
+
+  if (performed) {
+    const point = 1 + Math.floor(Math.random() * (p1.length - 1));
+    const c1 = [...p1.slice(0, point), ...p2.slice(point)];
+    const c2 = [...p2.slice(0, point), ...p1.slice(point)];
+    return {
+      children: [c1, c2],
+      point,
+      r,
+      cxRate,
+      performed: true,
+    };
+  }
+
+  return {
+    children: [[...p1], [...p2]],
+    point: -1,
+    r,
+    cxRate,
+    performed: false,
+  };
+}
+
 // ---- Mutation ----
 export function mutateChromosome(chr, rate, alleles) {
   const mutated = [...chr];
@@ -212,6 +238,36 @@ export function mutateChromosome(chr, rate, alleles) {
     }
   }
   return { chr: mutated, bits: mutatedBits };
+}
+
+export function mutateChromosomeWithDetails(chr, rate, alleles) {
+  const mutated = [...chr];
+  const mutatedBits = [];
+  const geneDetails = [];
+
+  for (let i = 0; i < mutated.length; i++) {
+    const r = Math.random();
+    const willMutate = r < rate;
+    const oldVal = mutated[i];
+
+    if (willMutate) {
+      let newGene;
+      if (alleles.length === 2) {
+        newGene = oldVal === alleles[0] ? alleles[1] : alleles[0];
+      } else {
+        do {
+          newGene = alleles[Math.floor(Math.random() * alleles.length)];
+        } while (newGene === oldVal && alleles.length > 1);
+      }
+      mutated[i] = newGene;
+      mutatedBits.push(i);
+      geneDetails.push({ pos: i, r, rate, mutated: true, before: oldVal, after: newGene });
+    } else {
+      geneDetails.push({ pos: i, r, rate, mutated: false, before: oldVal, after: oldVal });
+    }
+  }
+
+  return { chr: mutated, bits: mutatedBits, details: geneDetails };
 }
 
 // ---- Diversity ----

@@ -6,7 +6,9 @@ import {
   selectParent,
   selectParentWithDetails,
   singlePointCrossover,
+  singlePointCrossoverWithDetails,
   mutateChromosome,
+  mutateChromosomeWithDetails,
   computeDiversity,
 } from '../engine/ga';
 
@@ -34,9 +36,11 @@ const initialState = {
   selected: [],       // Array of [parentIdxA, parentIdxB]
   selectionSpins: {}, // parentIdx -> { r, cumProb, prob }
   offspring: [],
+  crossoverDetails: {}, // offspringIdx -> { parents: [pA, pB], sourceParent, r, cxRate, performed, cutPoint }
+  crossoverPoints: [], // per offspring
+  mutationDetails: {},  // offspringIdx -> { chr, bits, details: [...] }
   mutatedIndices: [],  // which offspring indices got mutated
   mutatedBitsMap: {},  // offspringIdx -> [bitPositions]
-  crossoverPoints: [], // per offspring
   genealogy: [],
   converged: false,
   stepLog: null,       // { icon, title, text, details }
@@ -137,9 +141,12 @@ export default function useGAEngine() {
           fitnesses,
           history,
           selected: [],
+          selectionSpins: {},
           mutatedIndices: [],
           mutatedBitsMap: {},
+          mutationDetails: {},
           offspring: [],
+          crossoverDetails: {},
           crossoverPoints: [],
           phase: converged ? 'converged' : 'select',
           converged,
@@ -241,26 +248,63 @@ export default function useGAEngine() {
         const needed = p.popSize;
         const offspring = [];
         const crossoverPoints = [];
+        const crossoverDetails = {};
         const genealogy = [...prev.genealogy];
+        const pairLogs = [];
 
-        for (const [pi1, pi2] of prev.selected) {
-          if (Math.random() < p.cxRate) {
-            const { children, point } = singlePointCrossover(prev.population[pi1], prev.population[pi2]);
-            offspring.push(children[0]);
-            crossoverPoints.push(point);
-            genealogy.push({ gen: prev.generation, parents: [pi1, pi2], childIdx: offspring.length - 1 });
-            if (offspring.length < needed) {
-              offspring.push(children[1]);
-              crossoverPoints.push(point);
-              genealogy.push({ gen: prev.generation, parents: [pi1, pi2], childIdx: offspring.length - 1 });
-            }
+        for (let pairIdx = 0; pairIdx < prev.selected.length; pairIdx++) {
+          const [pi1, pi2] = prev.selected[pairIdx];
+          const cxRes = singlePointCrossoverWithDetails(
+            prev.population[pi1],
+            prev.population[pi2],
+            p.cxRate
+          );
+
+          const rPct = (cxRes.r * 100).toFixed(1);
+          const ratePct = (cxRes.cxRate * 100).toFixed(0);
+
+          if (cxRes.performed) {
+            pairLogs.push(
+              `Pair ${pairIdx + 1} (P${pi1} × P${pi2}): r = ${rPct}% < ${ratePct}% → CROSSOVER at cut point ${cxRes.point}\n` +
+              `  Parent ${pi1}: [${prev.population[pi1].join('')}]\n` +
+              `  Parent ${pi2}: [${prev.population[pi2].join('')}]\n` +
+              `  O${offspring.length}: [${cxRes.children[0].join('')}] (cut @${cxRes.point})\n` +
+              (offspring.length + 1 < needed ? `  O${offspring.length + 1}: [${cxRes.children[1].join('')}] (cut @${cxRes.point})` : '')
+            );
           } else {
-            offspring.push([...prev.population[pi1]]);
-            crossoverPoints.push(-1);
-            if (offspring.length < needed) {
-              offspring.push([...prev.population[pi2]]);
-              crossoverPoints.push(-1);
-            }
+            pairLogs.push(
+              `Pair ${pairIdx + 1} (P${pi1} × P${pi2}): r = ${rPct}% ≥ ${ratePct}% → NO CROSSOVER (parents cloned directly)`
+            );
+          }
+
+          // Offspring 1
+          const offIdx1 = offspring.length;
+          offspring.push(cxRes.children[0]);
+          crossoverPoints.push(cxRes.performed ? cxRes.point : -1);
+          crossoverDetails[offIdx1] = {
+            parents: [pi1, pi2],
+            sourceParent: pi1,
+            r: cxRes.r,
+            cxRate: cxRes.cxRate,
+            performed: cxRes.performed,
+            cutPoint: cxRes.performed ? cxRes.point : -1,
+          };
+          genealogy.push({ gen: prev.generation, parents: [pi1, pi2], childIdx: offIdx1 });
+
+          // Offspring 2 if needed
+          if (offspring.length < needed) {
+            const offIdx2 = offspring.length;
+            offspring.push(cxRes.children[1]);
+            crossoverPoints.push(cxRes.performed ? cxRes.point : -1);
+            crossoverDetails[offIdx2] = {
+              parents: [pi1, pi2],
+              sourceParent: pi2,
+              r: cxRes.r,
+              cxRate: cxRes.cxRate,
+              performed: cxRes.performed,
+              cutPoint: cxRes.performed ? cxRes.point : -1,
+            };
+            genealogy.push({ gen: prev.generation, parents: [pi1, pi2], childIdx: offIdx2 });
           }
         }
 
@@ -272,19 +316,18 @@ export default function useGAEngine() {
           ...prev,
           offspring: trimmed,
           crossoverPoints: trimmedCp,
+          crossoverDetails,
           genealogy,
           phase: 'mutate',
           stepLog: {
             stepType: 'cross',
             title: 'Step 4: Crossover (Single-Point)',
-            text: `Parent pairs exchange genetic material at a random crossover point. With rate <b>${p.cxRate}</b>, <b>${crossedCount}</b> of <b>${trimmed.length}</b> offspring were created by crossover. Genes before the point come from one parent, after from the other.`,
-            details: prev.selected
-              .map((pair, i) => {
-                const pt = trimmedCp[i * 2] ?? trimmedCp[i];
-                if (!pt || pt < 0) return `Pair ${i + 1}: No crossover (cloned parents)`;
-                return `Pair ${i + 1}: Crossover at position ${pt}\n  P1: [${prev.population[pair[0]].join('')}]\n  P2: [${prev.population[pair[1]].join('')}]\n  C:  [${trimmed[i * 2]?.join('') ?? '—'}]`;
-              })
-              .join('\n\n'),
+            text: `For each parent pair, a random number r in [0, 1) is rolled. Crossover occurs <b>only if r &lt; crossover rate (${(p.cxRate * 100).toFixed(0)}%)</b> at a random cut point; otherwise parents are cloned directly. <b>${crossedCount}</b> of <b>${trimmed.length}</b> offspring were produced by crossover.`,
+            details: [
+              `Crossover Rate (cxRate) = ${(p.cxRate * 100).toFixed(0)}%`,
+              `Condition: Generate random r ∈ [0, 100%). If r < cxRate, pick random cut point k ∈ [1, L-1] and swap tails. Else, clone parents.\n`,
+              pairLogs.join('\n\n'),
+            ].join('\n'),
             phaseColor: 'pink',
           },
         };
@@ -295,32 +338,46 @@ export default function useGAEngine() {
         const newOffspring = [...prev.offspring.map((c) => [...c])];
         const mutatedIndices = [];
         const mutatedBitsMap = {};
+        const mutationDetails = {};
         let totalMutations = 0;
         const details = [];
 
         for (let i = 0; i < newOffspring.length; i++) {
           const before = [...newOffspring[i]];
-          const result = mutateChromosome(newOffspring[i], p.mutRate, problemDef.alleles);
+          const result = mutateChromosomeWithDetails(newOffspring[i], p.mutRate, problemDef.alleles);
           newOffspring[i] = result.chr;
+          mutationDetails[i] = result;
+
           if (result.bits.length > 0) {
             mutatedIndices.push(i);
             mutatedBitsMap[i] = result.bits;
             totalMutations += result.bits.length;
-            details.push(`Offspring ${i}: mutated at pos ${result.bits.join(', ')}\n  Before: [${before.join('')}]\n  After:  [${result.chr.join('')}]`);
+            const bitDescs = result.details
+              .filter((d) => d.mutated)
+              .map((d) => `pos ${d.pos}: r = ${(d.r * 100).toFixed(1)}% < ${(d.rate * 100).toFixed(0)}% (${d.before} → ${d.after})`)
+              .join('; ');
+            details.push(`Offspring O${i}: ${result.bits.length} mutation(s) [${bitDescs}]\n  Before: [${before.join('')}]\n  After:  [${result.chr.join('')}]`);
           }
         }
+
+        const mutRatePct = (p.mutRate * 100).toFixed(1);
 
         return {
           ...prev,
           offspring: newOffspring,
           mutatedIndices,
           mutatedBitsMap,
+          mutationDetails,
           phase: 'replace',
           stepLog: {
             stepType: 'mutate',
             title: 'Step 5: Mutation',
-            text: `Each gene has a <b>${(p.mutRate * 100).toFixed(0)}%</b> chance of flipping. <b>${totalMutations}</b> total mutations in <b>${mutatedIndices.length}</b> offspring. Mutation maintains genetic diversity and explores new areas of the search space.`,
-            details: details.length > 0 ? details.join('\n\n') : 'No mutations occurred this generation.',
+            text: `Each gene rolls a random number r in [0, 1). A gene mutates <b>only if r &lt; mutation rate (${mutRatePct}%)</b>. <b>${totalMutations}</b> total mutations occurred across <b>${mutatedIndices.length}</b> offspring.`,
+            details: [
+              `Mutation Rate (mutRate) = ${mutRatePct}% per gene`,
+              `Condition: For each gene, roll r ∈ [0, 100%). If r < mutRate, flip/change allele. Else, keep existing allele.\n`,
+              details.length > 0 ? details.join('\n\n') : 'No genes rolled r < mutRate. All genes remained unchanged this generation.',
+            ].join('\n'),
             phaseColor: 'rose',
           },
         };
@@ -337,10 +394,13 @@ export default function useGAEngine() {
           fitnesses: [],
           generation,
           selected: [],
+          selectionSpins: {},
           offspring: [],
+          crossoverDetails: {},
+          crossoverPoints: [],
+          mutationDetails: {},
           mutatedIndices: [],
           mutatedBitsMap: {},
-          crossoverPoints: [],
           phase: 'evaluate',
           converged: false,
           stepLog: {
