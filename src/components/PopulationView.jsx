@@ -19,7 +19,6 @@ export default function PopulationView({ state, params }) {
     <div className="max-h-[460px] overflow-y-auto space-y-1.5 pr-1">
       {/* Legend */}
       <div className="flex items-center gap-4 text-[11px] text-stone-600 mb-2.5 pb-2.5 border-b border-orange-100 flex-wrap">
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-700" /> Elite</span>
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-500" /> Selected Parent</span>
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-400" /> Offspring</span>
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> Mutated</span>
@@ -28,15 +27,11 @@ export default function PopulationView({ state, params }) {
       {/* Current Population */}
       <AnimatePresence mode="popLayout">
         {state.population.map((chr, i) => {
-          const isElite = state.eliteIndices.includes(i);
           const isSelected = state.selected.flat().includes(i);
 
           let rowStyle = 'bg-orange-50/30 hover:bg-orange-50/70 border border-transparent';
           let badge = null;
-          if (isElite) {
-            rowStyle = 'bg-orange-100/60 border border-orange-300';
-            badge = <Badge label="★ Elite" isElite />;
-          } else if (isSelected) {
+          if (isSelected) {
             rowStyle = 'bg-amber-50 border border-amber-300';
             badge = <Badge label="⟡ Parent" isParent />;
           }
@@ -170,9 +165,8 @@ function FitnessBar({ value, max }) {
   );
 }
 
-function Badge({ label, isElite, isParent, isMutated }) {
+function Badge({ label, isParent, isMutated }) {
   let cls = 'bg-orange-100 text-orange-900 border border-orange-300';
-  if (isElite) cls = 'bg-orange-100 text-orange-950 border border-orange-400 font-bold';
   if (isParent) cls = 'bg-amber-100 text-orange-900 border border-amber-300 font-bold';
   if (isMutated) cls = 'bg-orange-200 text-orange-950 border border-orange-500 font-bold';
 

@@ -28,7 +28,6 @@ const initialState = {
   history: { best: [], avg: [], worst: [], diversity: [] },
   selected: [],       // Array of [parentIdxA, parentIdxB]
   offspring: [],
-  eliteIndices: [],
   mutatedIndices: [],  // which offspring indices got mutated
   mutatedBitsMap: {},  // offspringIdx -> [bitPositions]
   crossoverPoints: [], // per offspring
@@ -46,7 +45,6 @@ export default function useGAEngine() {
     cxRate: 0.8,
     mutRate: 0.05,
     selection: 'roulette',
-    elitism: 1,
     target: 'HELLO',
   });
   const [playing, setPlaying] = useState(false);
@@ -110,15 +108,6 @@ export default function useGAEngine() {
       // === EVALUATE ===
       if (prev.phase === 'evaluate') {
         const fitnesses = evaluatePopulation(prev.population, p.problem, target);
-        const eliteIndices = [];
-        if (p.elitism > 0) {
-          const indexed = fitnesses.map((f, i) => ({ f, i }));
-          indexed.sort((a, b) => b.f - a.f);
-          for (let i = 0; i < Math.min(p.elitism, indexed.length); i++) {
-            eliteIndices.push(indexed[i].i);
-          }
-        }
-
         const maxF = Math.max(...fitnesses);
         const avgF = (fitnesses.reduce((a, b) => a + b, 0) / fitnesses.length).toFixed(2);
         const converged = maxF >= problemDef.maxFitness(chrLen);
@@ -126,7 +115,6 @@ export default function useGAEngine() {
         return {
           ...prev,
           fitnesses,
-          eliteIndices,
           selected: [],
           mutatedIndices: [],
           mutatedBitsMap: {},
@@ -137,9 +125,9 @@ export default function useGAEngine() {
           stepLog: {
             icon: '📊',
             title: 'Step 2: Fitness Evaluation',
-            text: `Each chromosome is scored by the fitness function. Best: <b class="text-orange-600 font-bold">${maxF}</b>, Average: <b>${avgF}</b>. ${eliteIndices.length > 0 ? `Top ${eliteIndices.length} elite(s) will be preserved.` : ''}${converged ? ' <b class="text-orange-600 font-bold">🎉 Optimal solution found!</b>' : ''}`,
+            text: `Each chromosome is scored by the fitness function. Best: <b class="text-orange-600 font-bold">${maxF}</b>, Average: <b>${avgF}</b>.${converged ? ' <b class="text-orange-600 font-bold">🎉 Optimal solution found!</b>' : ''}`,
             details: prev.population
-              .map((c, i) => `Chr ${i}: [${c.join('')}] → fitness = ${fitnesses[i]}${eliteIndices.includes(i) ? '  ★ ELITE' : ''}`)
+              .map((c, i) => `Chr ${i}: [${c.join('')}] → fitness = ${fitnesses[i]}`)
               .join('\n'),
             phaseColor: 'emerald',
           },
@@ -148,7 +136,7 @@ export default function useGAEngine() {
 
       // === SELECT ===
       if (prev.phase === 'select') {
-        const needed = p.popSize - p.elitism;
+        const needed = p.popSize;
         const parentPairs = Math.ceil(needed / 2);
         const selected = [];
 
@@ -188,7 +176,7 @@ export default function useGAEngine() {
 
       // === CROSSOVER ===
       if (prev.phase === 'crossover') {
-        const needed = p.popSize - p.elitism;
+        const needed = p.popSize;
         const offspring = [];
         const crossoverPoints = [];
         const genealogy = [...prev.genealogy];
@@ -278,14 +266,7 @@ export default function useGAEngine() {
 
       // === REPLACE ===
       if (prev.phase === 'replace') {
-        const newPop = [];
-        for (const ei of prev.eliteIndices) {
-          newPop.push([...prev.population[ei]]);
-        }
-        for (const off of prev.offspring) {
-          newPop.push([...off]);
-        }
-        const trimmedPop = newPop.slice(0, p.popSize);
+        const trimmedPop = [...prev.offspring].slice(0, p.popSize);
         const fitnesses = evaluatePopulation(trimmedPop, p.problem, target);
         const generation = prev.generation + 1;
         const history = recordHistory(trimmedPop, fitnesses, prev.history);
@@ -303,13 +284,12 @@ export default function useGAEngine() {
           mutatedIndices: [],
           mutatedBitsMap: {},
           crossoverPoints: [],
-          eliteIndices: [],
           phase: 'evaluate',
           converged,
           stepLog: {
             icon: '🔄',
             title: `Step 6: Replacement — Generation ${generation}!`,
-            text: `The old population is replaced. <b>${p.elitism}</b> elite(s) survived, <b>${prev.offspring.length}</b> offspring join. ${converged ? '<b class="text-orange-600 font-bold">🎉 Optimal solution found! The algorithm converged.</b>' : 'The cycle continues: Evaluate → Select → Crossover → Mutate → Replace.'}`,
+            text: `The old population is replaced entirely by the <b>${prev.offspring.length}</b> new offspring. ${converged ? '<b class="text-orange-600 font-bold">🎉 Optimal solution found! The algorithm converged.</b>' : 'The cycle continues: Evaluate → Select → Crossover → Mutate → Replace.'}`,
             details: `Generation ${generation}\nBest fitness: ${maxF}\nBest: [${trimmedPop[fitnesses.indexOf(maxF)].join('')}]`,
             phaseColor: 'violet',
           },

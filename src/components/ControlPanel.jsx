@@ -124,16 +124,6 @@ export default function ControlPanel({
               <option value="rank">Rank-Based</option>
             </select>
           </div>
-          <Slider
-            icon={<Shield size={12} className="text-orange-500" />}
-            label="Elitism"
-            tooltip="Number of top solutions cloned directly into the next generation without changes. Guarantees the best fitness never decreases over time."
-            value={params.elitism}
-            min={0}
-            max={4}
-            step={1}
-            onChange={(v) => updateParams({ elitism: v })}
-          />
         </div>
       </Card>
 
