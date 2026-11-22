@@ -13,15 +13,6 @@ export default function ControlPanel({
 }) {
   const def = PROBLEMS[params.problem];
   const chrLen = params.problem === 'targetstr' ? params.target.length : params.chrLen;
-  const fits = state.fitnesses;
-  const best = fits.length > 0 ? Math.max(...fits) : '—';
-  const avg = fits.length > 0 ? (fits.reduce((a, b) => a + b, 0) / fits.length).toFixed(1) : '—';
-  const diversity = fits.length > 0
-    ? ((new Set(state.population.map(c => c.join('')))).size / state.population.length * 100).toFixed(0)
-    : '—';
-
-  const bestIdx = fits.length > 0 ? fits.indexOf(Math.max(...fits)) : -1;
-  const bestChr = bestIdx >= 0 ? state.population[bestIdx] : null;
 
   return (
     <aside className="flex flex-col gap-3.5 w-full lg:w-[320px] shrink-0">
@@ -195,26 +186,6 @@ export default function ControlPanel({
           </div>
         )}
       </Card>
-
-      {/* Stats */}
-      <Card icon={<Zap size={14} className="text-orange-500" />} title="Statistics">
-        <div className="grid grid-cols-2 gap-2">
-          <StatBox label="Best Fitness" value={best} />
-          <StatBox label="Avg Fitness" value={avg} />
-          <StatBox label="Generation" value={state.generation} />
-          <StatBox label="Diversity" value={diversity === '—' ? '—' : `${diversity}%`} />
-        </div>
-        {bestChr && (
-          <div className="mt-2.5 p-2.5 rounded-lg bg-orange-50 border border-orange-200">
-            <div className="text-[11px] text-orange-950 font-medium mb-0.5">Best Chromosome</div>
-            <div className="font-mono text-sm font-bold text-orange-600 break-all">
-              {params.problem === 'funcmax'
-                ? `[${bestChr.join('')}] = x=${parseInt(bestChr.join(''), 2)}`
-                : bestChr.join('')}
-            </div>
-          </div>
-        )}
-      </Card>
     </aside>
   );
 }
@@ -252,15 +223,6 @@ function Slider({ icon, label, tooltip, value, min, max, step, format, onChange,
         [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5
         [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-orange-500 [&::-webkit-slider-thumb]:shadow-sm"
       />
-    </div>
-  );
-}
-
-function StatBox({ label, value }) {
-  return (
-    <div className="text-center p-2.5 rounded-lg bg-orange-50/70 border border-orange-200">
-      <div className="text-[11px] text-stone-600 font-medium">{label}</div>
-      <div className="text-lg font-extrabold text-orange-600 font-mono mt-0.5">{value}</div>
     </div>
   );
 }
