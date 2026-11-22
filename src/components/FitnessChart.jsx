@@ -11,17 +11,14 @@ function CustomLegend() {
       <div className="flex items-center gap-2">
         <span className="w-6 h-0.5 bg-[#ea580c] inline-block rounded-full" />
         <span className="text-stone-800 font-semibold">Best</span>
-        <span className="text-[10px] text-stone-500 font-mono">(Solid)</span>
       </div>
       <div className="flex items-center gap-2">
         <span className="w-6 border-t-2 border-dashed border-[#d97706] inline-block" />
         <span className="text-stone-800 font-semibold">Average</span>
-        <span className="text-[10px] text-stone-500 font-mono">(Dashed)</span>
       </div>
       <div className="flex items-center gap-2">
         <span className="w-6 border-t-2 border-dotted border-[#78716c] inline-block" />
         <span className="text-stone-800 font-semibold">Worst</span>
-        <span className="text-[10px] text-stone-500 font-mono">(Dotted)</span>
       </div>
     </div>
   );
@@ -93,10 +90,6 @@ export default function FitnessChart({ history }) {
                 color: '#1c1917',
                 boxShadow: '0 4px 14px rgba(234, 88, 12, 0.15)',
               }}
-              formatter={(value, name) => [
-                value,
-                name === 'Best' ? 'Best (Solid)' : name === 'Average' ? 'Average (Dashed)' : 'Worst (Dotted)',
-              ]}
             />
             <Legend content={<CustomLegend />} />
             <Area
