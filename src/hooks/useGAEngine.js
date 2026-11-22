@@ -76,7 +76,19 @@ export default function useGAEngine() {
   // ---- Step ----
   const step = useCallback(() => {
     setState((prev) => {
-      if (prev.converged) return prev;
+      if (prev.converged) {
+        return {
+          ...prev,
+          phase: 'converged',
+          stepLog: {
+            icon: '🎯',
+            title: 'Algorithm Converged',
+            text: 'The optimal solution has already been achieved. Press <b>Reset</b> to run a new search or adjust parameters.',
+            details: prev.stepLog?.details || '',
+            phaseColor: 'orange',
+          },
+        };
+      }
 
       const p = params;
       const chrLen = getEffectiveChrLen();
@@ -120,12 +132,14 @@ export default function useGAEngine() {
           mutatedBitsMap: {},
           offspring: [],
           crossoverPoints: [],
-          phase: 'select',
+          phase: converged ? 'converged' : 'select',
           converged,
           stepLog: {
-            icon: '📊',
-            title: 'Step 2: Fitness Evaluation',
-            text: `Each chromosome is scored by the fitness function. Best: <b class="text-orange-600 font-bold">${maxF}</b>, Average: <b>${avgF}</b>.${converged ? ' <b class="text-orange-600 font-bold">Optimal solution found!</b>' : ''}`,
+            icon: converged ? '🎯' : '📊',
+            title: converged ? 'Convergence Achieved: Optimal Solution Found' : 'Step 2: Fitness Evaluation',
+            text: converged
+              ? `Optimal chromosome found with maximum fitness of <b class="text-orange-600 font-bold">${maxF}</b>. The algorithm has successfully converged!`
+              : `Each chromosome is scored by the fitness function. Best: <b class="text-orange-600 font-bold">${maxF}</b>, Average: <b>${avgF}</b>.`,
             details: prev.population
               .map((c, i) => `Chr ${i}: [${c.join('')}] → fitness = ${fitnesses[i]}`)
               .join('\n'),
@@ -284,12 +298,14 @@ export default function useGAEngine() {
           mutatedIndices: [],
           mutatedBitsMap: {},
           crossoverPoints: [],
-          phase: 'evaluate',
+          phase: converged ? 'converged' : 'evaluate',
           converged,
           stepLog: {
-            icon: '🔄',
-            title: `Step 6: Replacement — Generation ${generation}!`,
-            text: `The old population is replaced entirely by the <b>${prev.offspring.length}</b> new offspring. ${converged ? '<b class="text-orange-600 font-bold">Optimal solution found! The algorithm converged.</b>' : 'The cycle continues: Evaluate → Select → Crossover → Mutate → Replace.'}`,
+            icon: converged ? '🎯' : '🔄',
+            title: converged ? `Convergence Achieved — Generation ${generation}` : `Step 6: Replacement — Generation ${generation}!`,
+            text: converged
+              ? `The new generation produced the optimal solution with maximum fitness <b class="text-orange-600 font-bold">${maxF}</b>! The algorithm has fully converged.`
+              : `The old population is replaced entirely by the <b>${prev.offspring.length}</b> new offspring. The cycle continues: Evaluate → Select → Crossover → Mutate → Replace.`,
             details: `Generation ${generation}\nBest fitness: ${maxF}\nBest: [${trimmedPop[fitnesses.indexOf(maxF)].join('')}]`,
             phaseColor: 'violet',
           },

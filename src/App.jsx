@@ -66,7 +66,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#fffaf5] text-stone-900">
-      <Header generation={state.generation} phase={state.phase} />
+      <Header generation={state.generation} phase={state.phase} converged={state.converged} />
 
       <div className="max-w-[1700px] mx-auto px-4 md:px-6 py-5 flex flex-col lg:flex-row gap-5">
         {/* Left Panel */}

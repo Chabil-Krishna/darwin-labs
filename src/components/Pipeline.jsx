@@ -15,6 +15,7 @@ export default function Pipeline({ phase }) {
     crossover: 'select',
     mutate: 'cross',
     replace: 'mutate',
+    converged: 'replace',
   };
 
   const completedStepId = justCompleted[phase];

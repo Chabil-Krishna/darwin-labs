@@ -7,10 +7,12 @@ const PHASE_STYLES = {
   crossover: { label: 'Crossover', bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-300' },
   mutate: { label: 'Mutating', bg: 'bg-orange-200', text: 'text-orange-900', border: 'border-orange-400' },
   replace: { label: 'Replacing', bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-300' },
+  converged: { label: 'Converged', bg: 'bg-orange-500', text: 'text-white', border: 'border-orange-600', dot: 'bg-white', isConverged: true },
 };
 
-export default function Header({ generation, phase }) {
-  const ps = PHASE_STYLES[phase] || PHASE_STYLES.idle;
+export default function Header({ generation, phase, converged }) {
+  const isConverged = phase === 'converged' || Boolean(converged);
+  const ps = isConverged ? PHASE_STYLES.converged : (PHASE_STYLES[phase] || PHASE_STYLES.idle);
 
   return (
     <header className="border-b border-orange-200 bg-white shadow-sm shadow-orange-100/50 sticky top-0 z-40">
@@ -36,8 +38,8 @@ export default function Header({ generation, phase }) {
             <FlaskConical size={12} className="text-orange-500" />
             Gen {generation}
           </span>
-          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${ps.bg} ${ps.text} ${ps.border}`}>
-            <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-all ${ps.bg} ${ps.text} ${ps.border}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${ps.dot || 'bg-orange-500'} ${isConverged ? '' : 'animate-pulse'}`} />
             {ps.label}
           </span>
         </div>
