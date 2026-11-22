@@ -74,11 +74,15 @@ export default function PopulationView({ state, params }) {
                   x={parseInt(chr.join(''), 2)}
                 </span>
               )}
-              <span className="font-mono text-xs font-bold text-stone-800 shrink-0 whitespace-nowrap min-w-[68px] text-right">
-                <span className="text-orange-700 font-sans font-medium text-[11px] mr-1">f(x) =</span>
-                <span>{state.fitnesses[i] !== undefined ? state.fitnesses[i] : '—'}</span>
-              </span>
-              <FitnessBar value={state.fitnesses[i]} max={def.maxFitness(chrLen)} />
+              {state.fitnesses[i] !== undefined && (
+                <>
+                  <span className="font-mono text-xs font-bold text-stone-800 shrink-0 whitespace-nowrap min-w-[68px] text-right">
+                    <span className="text-orange-700 font-sans font-medium text-[11px] mr-1">f(x) =</span>
+                    <span>{state.fitnesses[i]}</span>
+                  </span>
+                  <FitnessBar value={state.fitnesses[i]} max={def.maxFitness(chrLen)} />
+                </>
+              )}
               {badge}
               {isSelected && totalFitness > 0 && (
                 <span
@@ -201,11 +205,7 @@ function ChromosomeDisplay({ chr, problem, target, crossoverPoint, mutatedBits =
 }
 
 function FitnessBar({ value, max }) {
-  if (value === undefined || value === null) {
-    return (
-      <div className="w-16 h-1.5 rounded-full bg-orange-100/60 border border-orange-200/50 overflow-hidden shrink-0" />
-    );
-  }
+  if (value === undefined || value === null) return null;
   const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
   return (
     <div className="w-16 h-1.5 rounded-full bg-orange-100 border border-orange-200 overflow-hidden shrink-0">
