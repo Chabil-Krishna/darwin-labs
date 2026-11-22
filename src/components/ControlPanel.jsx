@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { PROBLEMS } from '../engine/ga';
 import {
   Play, Pause, SkipForward, RotateCcw,
@@ -63,22 +64,56 @@ export default function ControlPanel({
       {/* Parameters */}
       <Card icon={<Zap size={14} className="text-dna-amber" />} title="Parameters">
         <div className="space-y-3">
-          <Slider icon={<Users size={12} />} label="Population Size" value={params.popSize} min={4} max={20} step={2}
-            onChange={(v) => updateParams({ popSize: v })} />
-          <Slider icon={<Ruler size={12} />} label="Chromosome Length" value={chrLen}
-            min={4} max={16} step={1}
+          <Slider
+            icon={<Users size={12} />}
+            label="Population Size"
+            tooltip="Number of candidate solutions in each generation. Larger populations explore more combinations and prevent inbreeding, but require more fitness computations per generation."
+            value={params.popSize}
+            min={4}
+            max={20}
+            step={2}
+            onChange={(v) => updateParams({ popSize: v })}
+          />
+          <Slider
+            icon={<Ruler size={12} />}
+            label="Chromosome Length"
+            tooltip="Number of genes per individual. Defines the resolution and dimensionality of the search space (2ᴸ for binary). Longer chromosomes take more generations to optimize."
+            value={chrLen}
+            min={4}
+            max={16}
+            step={1}
             disabled={!def.chrLenEditable}
-            onChange={(v) => updateParams({ chrLen: v })} />
-          <Slider icon={<Shuffle size={12} />} label="Crossover Rate" value={params.cxRate}
-            min={0} max={1} step={0.05} format={(v) => v.toFixed(2)}
-            onChange={(v) => updateParams({ cxRate: v })} />
-          <Slider icon={<Dna size={12} />} label="Mutation Rate" value={params.mutRate}
-            min={0} max={0.5} step={0.01} format={(v) => v.toFixed(2)}
-            onChange={(v) => updateParams({ mutRate: v })} />
+            onChange={(v) => updateParams({ chrLen: v })}
+          />
+          <Slider
+            icon={<Shuffle size={12} />}
+            label="Crossover Rate"
+            tooltip="Probability that selected parents mate and recombine genes. High rates (0.6–0.9) promote rapid sharing of good traits; low rates rely primarily on cloning and mutation."
+            value={params.cxRate}
+            min={0}
+            max={1}
+            step={0.05}
+            format={(v) => v.toFixed(2)}
+            onChange={(v) => updateParams({ cxRate: v })}
+          />
+          <Slider
+            icon={<Dna size={12} />}
+            label="Mutation Rate"
+            tooltip="Probability of flipping individual genes. Keeps the gene pool diverse and escapes local optima. If set too high, the algorithm degrades into a random search."
+            value={params.mutRate}
+            min={0}
+            max={0.5}
+            step={0.01}
+            format={(v) => v.toFixed(2)}
+            onChange={(v) => updateParams({ mutRate: v })}
+          />
           <div>
-            <label className="text-xs text-text-muted font-medium flex items-center gap-1.5 mb-1">
-              <Shield size={12} /> Selection Method
-            </label>
+            <div className="flex items-center justify-between text-xs mb-1">
+              <label className="text-text-muted font-medium flex items-center gap-1">
+                <Shield size={12} /> Selection Method
+                <InfoTooltip text="How parents are chosen based on fitness. Roulette is fitness-proportional, Tournament picks the best from random groups, and Rank balances selection pressure." />
+              </label>
+            </div>
             <select
               value={params.selection}
               onChange={(e) => updateParams({ selection: e.target.value })}
@@ -89,9 +124,16 @@ export default function ControlPanel({
               <option value="rank">Rank-Based</option>
             </select>
           </div>
-          <Slider icon={<Shield size={12} />} label="Elitism" value={params.elitism}
-            min={0} max={4} step={1}
-            onChange={(v) => updateParams({ elitism: v })} />
+          <Slider
+            icon={<Shield size={12} />}
+            label="Elitism"
+            tooltip="Number of top solutions cloned directly into the next generation without changes. Guarantees the best fitness never decreases over time."
+            value={params.elitism}
+            min={0}
+            max={4}
+            step={1}
+            onChange={(v) => updateParams({ elitism: v })}
+          />
         </div>
       </Card>
 
@@ -221,11 +263,43 @@ function Card({ icon, title, children }) {
   );
 }
 
-function Slider({ icon, label, value, min, max, step, format, onChange, disabled }) {
+function InfoTooltip({ text }) {
+  const [show, setShow] = useState(false);
+
+  return (
+    <span
+      className="relative inline-flex items-center justify-center cursor-help ml-1 align-middle select-none"
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+      onFocus={() => setShow(true)}
+      onBlur={() => setShow(false)}
+      tabIndex={0}
+      aria-label="Parameter info"
+    >
+      <span className="w-3.5 h-3.5 rounded-full border border-text-muted/60 text-text-muted hover:border-dna-cyan hover:text-dna-cyan hover:bg-dna-cyan/15 flex items-center justify-center text-[10px] font-serif font-bold italic transition-colors leading-none">
+        i
+      </span>
+      {show && (
+        <span
+          role="tooltip"
+          className="absolute z-50 bottom-full left-0 mb-2 w-56 p-2.5 rounded-lg bg-surface-700 text-text-primary text-[11px] font-normal leading-relaxed border border-dna-cyan/40 shadow-xl shadow-black/80 backdrop-blur-md pointer-events-none text-left animate-in fade-in zoom-in-95 duration-150"
+        >
+          {text}
+          <span className="absolute top-full left-2 -mt-px border-4 border-transparent border-t-surface-700" />
+        </span>
+      )}
+    </span>
+  );
+}
+
+function Slider({ icon, label, tooltip, value, min, max, step, format, onChange, disabled }) {
   return (
     <div className={disabled ? 'opacity-40 pointer-events-none' : ''}>
       <div className="flex items-center justify-between text-xs mb-1">
-        <span className="text-text-muted font-medium flex items-center gap-1">{icon} {label}</span>
+        <span className="text-text-muted font-medium flex items-center gap-1">
+          {icon} {label}
+          {tooltip && <InfoTooltip text={tooltip} />}
+        </span>
         <span className="font-bold text-text-primary font-mono">{format ? format(value) : value}</span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value}
