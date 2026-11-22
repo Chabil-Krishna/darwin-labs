@@ -7,11 +7,10 @@ import Pipeline from './components/Pipeline';
 import PopulationView from './components/PopulationView';
 import FitnessChart from './components/FitnessChart';
 import GenePoolHeatmap from './components/GenePoolHeatmap';
-import GenealogyView from './components/GenealogyView';
 import DiversityChart from './components/DiversityChart';
 import TextbookCheck from './components/TextbookCheck';
 import InfoTooltip from './components/InfoTooltip';
-import { Users, TrendingUp, Flame, GitBranch, Activity, BookOpen } from 'lucide-react';
+import { Users, TrendingUp, Flame, Activity, BookOpen } from 'lucide-react';
 
 const TABS = [
   {
@@ -37,14 +36,6 @@ const TABS = [
     align: 'center',
     title: 'Gene Pool Column',
     tooltip: 'Real-time heatmap showing allele frequency distribution across all chromosome positions (loci) to inspect genetic drift and locus convergence.',
-  },
-  {
-    id: 'genealogy',
-    label: 'Genealogy',
-    icon: GitBranch,
-    align: 'center',
-    title: 'Genealogy Column',
-    tooltip: 'Interactive family tree tracing ancestry across generations with curved Bézier links connecting mated parents to their offspring.',
   },
   {
     id: 'diversity',
@@ -140,9 +131,6 @@ export default function App() {
               )}
               {activeTab === 'heatmap' && (
                 <GenePoolHeatmap population={state.population} params={params} />
-              )}
-              {activeTab === 'genealogy' && (
-                <GenealogyView genealogy={state.genealogy} history={state.history} params={params} />
               )}
               {activeTab === 'diversity' && (
                 <DiversityChart history={state.history} />
