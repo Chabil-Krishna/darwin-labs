@@ -34,7 +34,8 @@ const initialState = {
   phase: 'idle',
   history: { best: [], avg: [], worst: [], diversity: [] },
   selected: [],       // Array of [parentIdxA, parentIdxB]
-  selectionSpins: {}, // parentIdx -> { r, cumProb, prob }
+  selectedPool: [],   // Array of { spinNum, idx, r, cumProb, prob, total }
+  selectionSpins: {}, // chrIdx -> [{ spinNum, r, cumProb, prob, total }]
   offspring: [],
   crossoverDetails: {}, // offspringIdx -> { parents: [pA, pB], sourceParent, r, cxRate, performed, cutPoint }
   crossoverPoints: [], // per offspring
@@ -141,6 +142,7 @@ export default function useGAEngine() {
           fitnesses,
           history,
           selected: [],
+          selectedPool: [],
           selectionSpins: {},
           mutatedIndices: [],
           mutatedBitsMap: {},
@@ -167,8 +169,7 @@ export default function useGAEngine() {
       // === SELECT ===
       if (prev.phase === 'select') {
         const needed = p.popSize;
-        const parentPairs = Math.ceil(needed / 2);
-        const selected = [];
+        const selectedPool = [];
         const selectionSpins = {};
 
         const totalF = prev.fitnesses.reduce((a, b) => a + b, 0);
@@ -180,63 +181,73 @@ export default function useGAEngine() {
         });
         if (cumProbs.length > 0) cumProbs[cumProbs.length - 1] = 1.0;
 
-        for (let i = 0; i < parentPairs; i++) {
-          const s1 = selectParentWithDetails(prev.fitnesses, p.selection);
-          let s2 = selectParentWithDetails(prev.fitnesses, p.selection);
-          let tries = 0;
-          while (s2.idx === s1.idx && tries < 10) {
-            s2 = selectParentWithDetails(prev.fitnesses, p.selection);
-            tries++;
-          }
-          selected.push([s1.idx, s2.idx]);
+        // Spin the roulette wheel exactly popSize times (with replacement)
+        // The same chromosome can be selected multiple times.
+        for (let spin = 0; spin < needed; spin++) {
+          const s = selectParentWithDetails(prev.fitnesses, p.selection);
+          const spinInfo = {
+            spinNum: spin + 1,
+            idx: s.idx,
+            r: s.r,
+            cumProb: s.cumProb,
+            prob: s.prob,
+            total: totalF,
+          };
+          selectedPool.push(spinInfo);
 
-          if (s1.r !== null) {
-            selectionSpins[s1.idx] = { r: s1.r, cumProb: s1.cumProb, prob: s1.prob };
+          if (!selectionSpins[s.idx]) {
+            selectionSpins[s.idx] = [];
           }
-          if (s2.r !== null) {
-            selectionSpins[s2.idx] = { r: s2.r, cumProb: s2.cumProb, prob: s2.prob };
-          }
+          selectionSpins[s.idx].push(spinInfo);
+        }
+
+        // Form parent pairs from the mating pool for crossover
+        const selected = [];
+        for (let i = 0; i < needed; i += 2) {
+          const p1 = selectedPool[i].idx;
+          const p2 = (i + 1 < needed) ? selectedPool[i + 1].idx : selectedPool[0].idx;
+          selected.push([p1, p2]);
         }
 
         const methodNames = { roulette: 'Roulette Wheel', tournament: 'Tournament (k=3)', rank: 'Rank-Based' };
         const selectionDesc = {
-          roulette: 'Each chromosome gets a slice proportional to its fitness. A random number r in [0, 1) is generated, and the chromosome with cumulative probability q >= r is chosen.',
-          tournament: 'We randomly pick 3 individuals and the fittest one wins. This provides good selective pressure without computing total fitness.',
-          rank: 'Chromosomes are ranked by fitness (1=worst, N=best). Selection probability is proportional to rank, preventing dominance by a single super-fit individual.',
+          roulette: `The roulette wheel is spun exactly <b>${needed}</b> times (equal to population size). Selected with replacement (cumulative probability q &ge; r), so the same chromosome can be selected again and again into the mating pool.`,
+          tournament: `Randomly picks 3 individuals for each of the <b>${needed}</b> mating pool slots, selecting the fittest one each time.`,
+          rank: `Chromosomes are ranked by fitness, and <b>${needed}</b> selections are made proportional to rank.`,
         };
 
         const tableLines = prev.population.map((c, i) => {
           const f = prev.fitnesses[i] ?? 0;
           const pVal = ((probs[i] || 0) * 100).toFixed(1);
           const qVal = ((cumProbs[i] || 0) * 100).toFixed(1);
-          return `  Chr ${i}: f(x) = ${f.toString().padEnd(4)} | p = ${pVal.padStart(5)}% | cum(q) = ${qVal.padStart(5)}%`;
+          const times = selectionSpins[i]?.length || 0;
+          return `  Chr ${i}: f(x) = ${f.toString().padEnd(4)} | p = ${pVal.padStart(5)}% | cum(q) = ${qVal.padStart(5)}% | selected ${times}×`;
+        });
+
+        const spinLines = selectedPool.map((s) => {
+          const rStr = s.r !== null ? `(r = ${(s.r * 100).toFixed(1)}% ≤ cum ${(s.cumProb * 100).toFixed(1)}%)` : '';
+          return `  Spin #${s.spinNum}: Chr ${s.idx} ${rStr}`;
         });
 
         const pairLines = selected.map((pair, i) => {
-          const sA = selectionSpins[pair[0]];
-          const sB = selectionSpins[pair[1]];
-          const descA = sA
-            ? `Chr ${pair[0]} (r = ${(sA.r * 100).toFixed(1)}% <= cum ${(sA.cumProb * 100).toFixed(1)}%)`
-            : `Chr ${pair[0]}`;
-          const descB = sB
-            ? `Chr ${pair[1]} (r = ${(sB.r * 100).toFixed(1)}% <= cum ${(sB.cumProb * 100).toFixed(1)}%)`
-            : `Chr ${pair[1]}`;
-          return `Pair ${i + 1}:\n  Parent A: ${descA}\n  Parent B: ${descB}`;
+          return `  Pair ${i + 1}: Parent A (Chr ${pair[0]}) × Parent B (Chr ${pair[1]})`;
         });
 
         return {
           ...prev,
           selected,
+          selectedPool,
           selectionSpins,
           phase: 'crossover',
           stepLog: {
             stepType: 'select',
             title: `Step 3: Selection — ${methodNames[p.selection]}`,
-            text: selectionDesc[p.selection] + ` Selected <b>${parentPairs}</b> parent pairs for mating. Total fitness Σf = <b>${totalF}</b>.`,
+            text: selectionDesc[p.selection] + ` Total population fitness Σf = <b>${totalF}</b>. Formed <b>${selected.length}</b> parent pairs for crossover.`,
             details: [
               `Total Population Fitness (Σf) = ${totalF}`,
               `Cumulative Probability Table:\n` + tableLines.join('\n'),
-              `Selection Rule: Pick random r in [0, 100%); select first individual where cumulative probability q >= r.\n\nSelected Pairs:\n` + pairLines.join('\n'),
+              `Roulette Wheel Spins (${needed} spins with replacement):\n` + spinLines.join('\n'),
+              `Parent Pairs for Crossover:\n` + pairLines.join('\n'),
             ].join('\n\n'),
             phaseColor: 'amber',
           },
@@ -394,6 +405,7 @@ export default function useGAEngine() {
           fitnesses: [],
           generation,
           selected: [],
+          selectedPool: [],
           selectionSpins: {},
           offspring: [],
           crossoverDetails: {},

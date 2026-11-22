@@ -45,17 +45,21 @@ export default function PopulationView({ state, params }) {
       {/* Current Population */}
       <AnimatePresence mode="popLayout">
         {state.population.map((chr, i) => {
-          const isSelected = state.selected.flat().includes(i);
+          const spins = Array.isArray(state.selectionSpins?.[i])
+            ? state.selectionSpins[i]
+            : (state.selectionSpins?.[i] ? [state.selectionSpins[i]] : []);
+          const isSelected = spins.length > 0 || state.selected.flat().includes(i);
+          const spinCount = spins.length || state.selected.flat().filter((idx) => idx === i).length;
           const fit = state.fitnesses[i] ?? 0;
           const prob = totalFitness > 0 ? (fit / totalFitness) : 0;
           const probPercent = (prob * 100).toFixed(1);
-          const spin = state.selectionSpins?.[i];
 
           let rowStyle = 'bg-orange-50/30 hover:bg-orange-50/70 border border-transparent';
           let badge = null;
           if (isSelected) {
             rowStyle = 'bg-amber-50 border border-amber-300';
-            badge = <Badge label="Parent" isParent />;
+            const badgeLabel = spinCount > 1 ? `Parent (×${spinCount})` : 'Parent';
+            badge = <Badge label={badgeLabel} isParent />;
           }
 
           return (
@@ -87,20 +91,40 @@ export default function PopulationView({ state, params }) {
               {isSelected && totalFitness > 0 && (
                 <span
                   title={
-                    spin
-                      ? `Roulette Selection: Random spin r = ${(spin.r * 100).toFixed(2)}%. Selected because cumulative probability q (${(spin.cumProb * 100).toFixed(2)}%) >= r (${(spin.r * 100).toFixed(2)}%). Individual p = ${fit}/${totalFitness} = ${probPercent}%.`
-                      : `Roulette Wheel Selection Probability: p = f_i / Σf = ${fit} / ${totalFitness} = ${(prob * 100).toFixed(2)}%`
+                    spins.length > 0
+                      ? `Roulette Wheel Spins for Chr ${i}:\n` +
+                        spins
+                          .map(
+                            (s) =>
+                              `Spin #${s.spinNum}: r = ${(s.r * 100).toFixed(1)}% <= cum ${(s.cumProb * 100).toFixed(1)}% (p = ${probPercent}%)`
+                          )
+                          .join('\n')
+                      : `Roulette Wheel Selection Probability: p = f_i / Σf = ${fit} / ${totalFitness} = ${probPercent}%`
                   }
                   className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-mono bg-amber-100 text-amber-950 border border-amber-300 shrink-0 font-medium cursor-help"
                 >
                   <span className="text-amber-700 font-sans font-semibold">p =</span>
                   <span className="font-semibold">{fit}/{totalFitness}</span>
                   <span className="font-bold text-orange-700">({probPercent}%)</span>
-                  {spin && (
+                  {spins.length === 1 && (
                     <>
                       <span className="text-amber-400">|</span>
                       <span className="text-amber-900 font-bold">
-                        cum {(spin.cumProb * 100).toFixed(1)}% &ge; r {(spin.r * 100).toFixed(1)}%
+                        cum {(spins[0].cumProb * 100).toFixed(1)}% &ge; r {(spins[0].r * 100).toFixed(1)}%
+                      </span>
+                      <span className="text-amber-700 text-[9px] font-sans">
+                        (Spin #{spins[0].spinNum})
+                      </span>
+                    </>
+                  )}
+                  {spins.length > 1 && (
+                    <>
+                      <span className="text-amber-400">|</span>
+                      <span className="text-amber-900 font-bold">
+                        Selected {spins.length}×
+                      </span>
+                      <span className="text-amber-700 text-[9px] font-sans">
+                        (Spins {spins.map((s) => `#${s.spinNum}`).join(', ')})
                       </span>
                     </>
                   )}
@@ -110,6 +134,37 @@ export default function PopulationView({ state, params }) {
           );
         })}
       </AnimatePresence>
+
+      {/* Selected Mating Pool Cards (visible during Selection before Offspring appears) */}
+      {state.selectedPool && state.selectedPool.length > 0 && !showOffspring && (
+        <div className="mt-3 p-2.5 rounded-lg bg-amber-50/90 border border-amber-200">
+          <div className="flex items-center justify-between text-xs font-bold text-amber-950 mb-2">
+            <span>Mating Pool ({state.selectedPool.length} roulette wheel spins)</span>
+            <span className="text-[10px] text-amber-700 font-normal">
+              Sampled with replacement (same chromosome can be selected multiple times)
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {state.selectedPool.map((s) => (
+              <div
+                key={`spin-card-${s.spinNum}`}
+                className="bg-white/95 px-2 py-1.5 rounded border border-amber-200 shadow-2xs font-mono text-[10px] flex flex-col gap-0.5"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500 font-semibold">Spin #{s.spinNum}</span>
+                  <span className="text-orange-700 font-bold bg-orange-50 px-1 rounded border border-orange-200">Chr {s.idx}</span>
+                </div>
+                <div className="text-stone-700 truncate">
+                  r = <span className="font-bold text-stone-900">{(s.r * 100).toFixed(1)}%</span>
+                </div>
+                <div className="text-[9px] text-amber-800">
+                  cum {(s.cumProb * 100).toFixed(1)}% &ge; r
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Offspring */}
       {showOffspring && (
