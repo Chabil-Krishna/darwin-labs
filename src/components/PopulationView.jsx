@@ -237,15 +237,25 @@ export default function PopulationView({ state, params }) {
                   ) : null}
 
                   {/* Mutation Details: Random number vs mutRate check */}
-                  {isMutated && (
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono bg-orange-200/90 border border-orange-400 text-orange-950 shrink-0">
-                      <span className="font-bold text-orange-900">mutated</span>
-                      <span className="text-orange-400">|</span>
-                      <span>pos {mutBits.join(',')}</span>
-                      <span className="text-orange-800">
-                        (r &lt; {(params.mutRate * 100).toFixed(0)}%)
+                  {state.mutationDetails && Object.keys(state.mutationDetails).length > 0 && (
+                    isMutated ? (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono bg-orange-200/90 border border-orange-400 text-orange-950 shrink-0">
+                        <span className="font-bold text-orange-900">mutated</span>
+                        <span className="text-orange-400">|</span>
+                        <span>pos {mutBits.join(',')}</span>
+                        <span className="text-orange-800">
+                          (r &lt; {(params.mutRate * 100).toFixed(0)}%)
+                        </span>
                       </span>
-                    </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono bg-white/90 border border-orange-200 text-stone-600 shrink-0">
+                        <span className="font-medium text-stone-600">no mutation</span>
+                        <span className="text-orange-300">|</span>
+                        <span className="text-stone-500 text-[9px]">
+                          all r &ge; {(params.mutRate * 100).toFixed(0)}%
+                        </span>
+                      </span>
+                    )
                   )}
                 </motion.div>
               );

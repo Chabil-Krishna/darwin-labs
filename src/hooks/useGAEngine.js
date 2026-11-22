@@ -353,6 +353,8 @@ export default function useGAEngine() {
         let totalMutations = 0;
         const details = [];
 
+        const mutRatePct = (p.mutRate * 100).toFixed(1);
+
         for (let i = 0; i < newOffspring.length; i++) {
           const before = [...newOffspring[i]];
           const result = mutateChromosomeWithDetails(newOffspring[i], p.mutRate, problemDef.alleles);
@@ -365,13 +367,13 @@ export default function useGAEngine() {
             totalMutations += result.bits.length;
             const bitDescs = result.details
               .filter((d) => d.mutated)
-              .map((d) => `pos ${d.pos}: r = ${(d.r * 100).toFixed(1)}% < ${(d.rate * 100).toFixed(0)}% (${d.before} → ${d.after})`)
+              .map((d) => `pos ${d.pos}: r = ${(d.r * 100).toFixed(1)}% < ${mutRatePct}% (${d.before} → ${d.after})`)
               .join('; ');
             details.push(`Offspring O${i}: ${result.bits.length} mutation(s) [${bitDescs}]\n  Before: [${before.join('')}]\n  After:  [${result.chr.join('')}]`);
+          } else {
+            details.push(`Offspring O${i}: No mutation (all gene rolls r ≥ ${mutRatePct}%)\n  Unchanged: [${before.join('')}]`);
           }
         }
-
-        const mutRatePct = (p.mutRate * 100).toFixed(1);
 
         return {
           ...prev,
