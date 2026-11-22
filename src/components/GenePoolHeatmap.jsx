@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { computeGeneFrequencies, PROBLEMS } from '../engine/ga';
+import InfoTooltip from './InfoTooltip';
 
 export default function GenePoolHeatmap({ population, params }) {
   const canvasRef = useRef(null);
@@ -118,10 +119,15 @@ export default function GenePoolHeatmap({ population, params }) {
 
   return (
     <div>
-      <p className="text-xs text-stone-600 mb-3">
-        Shows the frequency of each allele at each gene position. Deep orange = high frequency (convergence).
-        As the GA runs, columns "lock in" to specific optimal alleles.
-      </p>
+      <div className="flex items-center gap-1.5 text-xs text-stone-600 mb-3">
+        <span>Allele frequency distribution across chromosome positions. Deep orange = high frequency (convergence).</span>
+        <InfoTooltip
+          title="Gene Pool Column"
+          text="Real-time heatmap showing allele frequency distribution across all chromosome positions (loci) to inspect genetic drift and locus convergence."
+          align="left"
+          position="bottom"
+        />
+      </div>
       <div className="border border-orange-200 rounded-lg overflow-hidden bg-white p-1">
         <canvas ref={canvasRef} style={{ width: '100%', height: 280 }} />
       </div>

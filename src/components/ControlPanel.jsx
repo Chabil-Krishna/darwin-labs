@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { PROBLEMS } from '../engine/ga';
+import InfoTooltip from './InfoTooltip';
 import {
   Play, Pause, SkipForward, RotateCcw,
   Zap, Users, Ruler, Shuffle, Dna, Shield, Gauge, Target, Timer
@@ -271,42 +272,13 @@ function Card({ icon, title, children }) {
   );
 }
 
-function InfoTooltip({ text }) {
-  const [show, setShow] = useState(false);
-
-  return (
-    <span
-      className="relative inline-flex items-center justify-center cursor-help ml-1 align-middle select-none"
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-      onFocus={() => setShow(true)}
-      onBlur={() => setShow(false)}
-      tabIndex={0}
-      aria-label="Parameter info"
-    >
-      <span className="w-3.5 h-3.5 rounded-full border border-orange-300 text-orange-600 hover:border-orange-500 hover:text-orange-700 hover:bg-orange-100 flex items-center justify-center text-[10px] font-serif font-bold italic transition-colors leading-none">
-        i
-      </span>
-      {show && (
-        <span
-          role="tooltip"
-          className="absolute z-50 bottom-full left-0 mb-2 w-56 p-2.5 rounded-lg bg-white text-stone-800 text-[11px] font-normal leading-relaxed border border-orange-300 shadow-xl shadow-orange-950/15 pointer-events-none text-left"
-        >
-          {text}
-          <span className="absolute top-full left-2 -mt-px border-4 border-transparent border-t-white" />
-        </span>
-      )}
-    </span>
-  );
-}
-
 function Slider({ icon, label, tooltip, value, min, max, step, format, onChange, disabled }) {
   return (
     <div className={disabled ? 'opacity-40 pointer-events-none' : ''}>
       <div className="flex items-center justify-between text-xs mb-1">
         <span className="text-stone-700 font-medium flex items-center gap-1">
           {icon} {label}
-          {tooltip && <InfoTooltip text={tooltip} />}
+          {tooltip && <InfoTooltip text={tooltip} align="left" position="top" />}
         </span>
         <span className="font-bold text-orange-900 font-mono">{format ? format(value) : value}</span>
       </div>

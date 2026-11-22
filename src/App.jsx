@@ -10,15 +10,58 @@ import GenePoolHeatmap from './components/GenePoolHeatmap';
 import GenealogyView from './components/GenealogyView';
 import DiversityChart from './components/DiversityChart';
 import TextbookCheck from './components/TextbookCheck';
+import InfoTooltip from './components/InfoTooltip';
 import { Users, TrendingUp, Flame, GitBranch, Activity, BookOpen } from 'lucide-react';
 
 const TABS = [
-  { id: 'population', label: 'Population', icon: Users },
-  { id: 'fitness', label: 'Fitness', icon: TrendingUp },
-  { id: 'heatmap', label: 'Gene Pool', icon: Flame },
-  { id: 'genealogy', label: 'Genealogy', icon: GitBranch },
-  { id: 'diversity', label: 'Diversity', icon: Activity },
-  { id: 'textbook', label: 'Textbook', icon: BookOpen },
+  {
+    id: 'population',
+    label: 'Population',
+    icon: Users,
+    align: 'left',
+    title: 'Population Column',
+    tooltip: 'Displays every chromosome in the current generation with gene-level breakdown, fitness scores, selection status (parents), crossover points, and mutations.',
+  },
+  {
+    id: 'fitness',
+    label: 'Fitness',
+    icon: TrendingUp,
+    align: 'left',
+    title: 'Fitness Column',
+    tooltip: 'Live chart plotting Best, Average, and Worst fitness across generations to track convergence, evolutionary fitness gain, and population progress.',
+  },
+  {
+    id: 'heatmap',
+    label: 'Gene Pool',
+    icon: Flame,
+    align: 'center',
+    title: 'Gene Pool Column',
+    tooltip: 'Real-time heatmap showing allele frequency distribution across all chromosome positions (loci) to inspect genetic drift and locus convergence.',
+  },
+  {
+    id: 'genealogy',
+    label: 'Genealogy',
+    icon: GitBranch,
+    align: 'center',
+    title: 'Genealogy Column',
+    tooltip: 'Interactive family tree tracing ancestry across generations with curved Bézier links connecting mated parents to their offspring.',
+  },
+  {
+    id: 'diversity',
+    label: 'Diversity',
+    icon: Activity,
+    align: 'right',
+    title: 'Diversity Column',
+    tooltip: 'Monitors the percentage of unique chromosomes in the population over time to diagnose premature convergence and balance exploration vs. exploitation.',
+  },
+  {
+    id: 'textbook',
+    label: 'Textbook',
+    icon: BookOpen,
+    align: 'right',
+    title: 'Textbook Column',
+    tooltip: 'Interactive step-by-step verification of David E. Goldberg\'s classic (1989) f(x) = x² hand calculation with verified arithmetic at every step.',
+  },
 ];
 
 export default function App() {
@@ -58,7 +101,7 @@ export default function App() {
 
           {/* Tabs */}
           <div>
-            <div className="flex gap-1 px-1 overflow-x-auto">
+            <div className="flex flex-wrap sm:flex-nowrap gap-1 px-1 overflow-visible py-1">
               {TABS.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -67,8 +110,8 @@ export default function App() {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`
-                      flex items-center gap-1.5 px-4 py-2.5 rounded-t-lg text-xs font-semibold
-                      transition-all whitespace-nowrap cursor-pointer
+                      flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-t-lg text-xs font-semibold
+                      transition-all whitespace-nowrap cursor-pointer relative
                       ${isActive
                         ? 'bg-white text-orange-600 border border-orange-200 border-b-white font-bold shadow-sm'
                         : 'text-stone-500 hover:text-orange-600 hover:bg-orange-50 bg-transparent border border-transparent'
@@ -76,7 +119,13 @@ export default function App() {
                     `}
                   >
                     <Icon size={14} className={isActive ? 'text-orange-600' : 'text-stone-400'} />
-                    {tab.label}
+                    <span>{tab.label}</span>
+                    <InfoTooltip
+                      title={tab.title}
+                      text={tab.tooltip}
+                      align={tab.align}
+                      position="top"
+                    />
                   </button>
                 );
               })}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { runGoldbergExample } from '../engine/ga';
+import InfoTooltip from './InfoTooltip';
 import { Play, CheckCircle2 } from 'lucide-react';
 
 export default function TextbookCheck() {
@@ -30,7 +31,15 @@ export default function TextbookCheck() {
     <div className="space-y-5 max-h-[460px] overflow-y-auto pr-1 text-sm">
       {/* Header */}
       <div className="p-3.5 rounded-lg bg-orange-50 border border-orange-200">
-        <h4 className="font-bold text-orange-900 mb-1">📖 Goldberg's f(x) = x² Example (1989)</h4>
+        <h4 className="font-bold text-orange-900 mb-1 flex items-center gap-1.5">
+          <span>📖 Goldberg's f(x) = x² Example (1989)</span>
+          <InfoTooltip
+            title="Textbook Column"
+            text="Interactive step-by-step verification of David E. Goldberg's classic (1989) f(x) = x² hand calculation with verified arithmetic at every step."
+            align="left"
+            position="bottom"
+          />
+        </h4>
         <p className="text-xs text-stone-600 leading-relaxed">
           Problem: Maximize f(x) = x² where x ∈ [0, 31], encoded as 5-bit binary string.
           <br />Population size: 4, Single-point crossover, Roulette wheel selection, No mutation.

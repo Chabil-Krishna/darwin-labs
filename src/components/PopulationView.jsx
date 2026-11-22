@@ -1,5 +1,6 @@
 import { PROBLEMS } from '../engine/ga';
 import { motion, AnimatePresence } from 'framer-motion';
+import InfoTooltip from './InfoTooltip';
 
 export default function PopulationView({ state, params }) {
   const def = PROBLEMS[params.problem];
@@ -17,11 +18,22 @@ export default function PopulationView({ state, params }) {
 
   return (
     <div className="max-h-[460px] overflow-y-auto space-y-1.5 pr-1">
-      {/* Legend */}
-      <div className="flex items-center gap-4 text-[11px] text-stone-600 mb-2.5 pb-2.5 border-b border-orange-100 flex-wrap">
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-500" /> Selected Parent</span>
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-400" /> Offspring</span>
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> Mutated</span>
+      {/* Header & Legend */}
+      <div className="flex items-center justify-between gap-3 text-[11px] text-stone-600 mb-2.5 pb-2.5 border-b border-orange-100 flex-wrap">
+        <div className="flex items-center gap-1.5 font-semibold text-orange-950">
+          <span>Chromosome Population</span>
+          <InfoTooltip
+            title="Population Column"
+            text="Displays every chromosome in the current generation with gene-level breakdown, fitness scores, selection status (parents), crossover points, and mutations."
+            align="left"
+            position="bottom"
+          />
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-500" /> Selected Parent</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-400" /> Offspring</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> Mutated</span>
+        </div>
       </div>
 
       {/* Current Population */}

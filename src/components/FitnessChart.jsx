@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import InfoTooltip from './InfoTooltip';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Area, AreaChart, Legend,
@@ -23,8 +24,21 @@ export default function FitnessChart({ history }) {
   }
 
   return (
-    <div className="h-80">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="space-y-2">
+      <div className="flex items-center justify-between text-xs text-stone-600 pb-2 border-b border-orange-100">
+        <span className="font-semibold text-orange-950 flex items-center gap-1.5">
+          Fitness Trajectory (Best, Average, Worst)
+          <InfoTooltip
+            title="Fitness Column"
+            text="Plots Best, Average, and Worst fitness across generations to track convergence, evolutionary fitness gain, and population progress."
+            align="left"
+            position="bottom"
+          />
+        </span>
+        <span className="text-[11px] text-stone-500 font-mono">Total Gens: {data.length}</span>
+      </div>
+      <div className="h-72">
+        <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
           <defs>
             <linearGradient id="bestGrad" x1="0" y1="0" x2="0" y2="1">
@@ -66,6 +80,7 @@ export default function FitnessChart({ history }) {
           <Line type="monotone" dataKey="Worst" stroke="#fdba74" strokeWidth={1.5} strokeDasharray="5 3" dot={false} />
         </AreaChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 }

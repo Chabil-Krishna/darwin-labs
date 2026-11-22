@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react';
+import InfoTooltip from './InfoTooltip';
 
 export default function GenealogyView({ genealogy, history, params }) {
   const canvasRef = useRef(null);
@@ -100,10 +101,15 @@ export default function GenealogyView({ genealogy, history, params }) {
 
   return (
     <div>
-      <p className="text-xs text-stone-600 mb-3">
-        Traces parent→offspring relationships from crossover. Warm orange curves connect parents (above) to
-        their children (below). Solid orange nodes = current generation.
-      </p>
+      <div className="flex items-center gap-1.5 text-xs text-stone-600 mb-3">
+        <span>Lineage tree showing mated parents (above) connecting to offspring (below) via orange curves.</span>
+        <InfoTooltip
+          title="Genealogy Column"
+          text="Interactive family tree tracing ancestry across generations with curved Bézier links connecting mated parents to their offspring."
+          align="left"
+          position="bottom"
+        />
+      </div>
       <div className="border border-orange-200 rounded-lg overflow-hidden bg-white p-1">
         <canvas ref={canvasRef} style={{ width: '100%', height: 280 }} />
       </div>

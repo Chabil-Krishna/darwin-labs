@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import InfoTooltip from './InfoTooltip';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function DiversityChart({ history }) {
@@ -19,10 +20,15 @@ export default function DiversityChart({ history }) {
 
   return (
     <div>
-      <p className="text-xs text-stone-600 mb-3">
-        Genetic diversity (% of unique chromosomes). Watch it decrease as the population converges.
-        Too little diversity = premature convergence. Mutation helps maintain diversity.
-      </p>
+      <div className="flex items-center gap-1.5 text-xs text-stone-600 mb-3">
+        <span>Genetic diversity (% of unique chromosomes). Watch it decrease as the population converges.</span>
+        <InfoTooltip
+          title="Diversity Column"
+          text="Monitors the percentage of unique chromosomes in the population over time to diagnose premature convergence and balance exploration vs. exploitation."
+          align="left"
+          position="bottom"
+        />
+      </div>
       <div className="h-56">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
