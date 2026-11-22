@@ -31,10 +31,10 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('population');
 
   return (
-    <div className="min-h-screen bg-surface-900">
+    <div className="min-h-screen bg-[#fffaf5] text-stone-900">
       <Header generation={state.generation} phase={state.phase} />
 
-      <div className="max-w-[1700px] mx-auto px-4 md:px-6 py-4 flex gap-4">
+      <div className="max-w-[1700px] mx-auto px-4 md:px-6 py-5 flex flex-col lg:flex-row gap-5">
         {/* Left Panel */}
         <ControlPanel
           params={params}
@@ -52,13 +52,13 @@ export default function App() {
         />
 
         {/* Main Area */}
-        <main className="flex-1 min-w-0 flex flex-col gap-3">
+        <main className="flex-1 min-w-0 flex flex-col gap-4">
           {/* Explanation */}
           <ExplanationPanel stepLog={state.stepLog} />
 
           {/* Tabs */}
           <div>
-            <div className="flex gap-0.5 px-1 overflow-x-auto">
+            <div className="flex gap-1 px-1 overflow-x-auto">
               {TABS.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -67,22 +67,22 @@ export default function App() {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`
-                      flex items-center gap-1.5 px-4 py-2 rounded-t-lg text-xs font-semibold
-                      transition-all whitespace-nowrap
+                      flex items-center gap-1.5 px-4 py-2.5 rounded-t-lg text-xs font-semibold
+                      transition-all whitespace-nowrap cursor-pointer
                       ${isActive
-                        ? 'bg-surface-800 text-text-primary border border-border border-b-transparent'
-                        : 'text-text-muted hover:text-text-secondary bg-transparent border border-transparent'
+                        ? 'bg-white text-orange-600 border border-orange-200 border-b-white font-bold shadow-sm'
+                        : 'text-stone-500 hover:text-orange-600 hover:bg-orange-50 bg-transparent border border-transparent'
                       }
                     `}
                   >
-                    <Icon size={13} />
+                    <Icon size={14} className={isActive ? 'text-orange-600' : 'text-stone-400'} />
                     {tab.label}
                   </button>
                 );
               })}
             </div>
 
-            <div className="bg-surface-800 border border-border rounded-b-xl rounded-tr-xl p-4 min-h-[420px]">
+            <div className="bg-white border border-orange-200 shadow-sm shadow-orange-100/50 rounded-b-xl rounded-tr-xl p-5 min-h-[420px]">
               {activeTab === 'population' && (
                 <PopulationView state={state} params={params} />
               )}
