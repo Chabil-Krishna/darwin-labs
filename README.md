@@ -2,8 +2,6 @@
 
 A browser-based educational and experimentation platform for understanding and mastering **Genetic Algorithms (GA)** through step-by-step interactive simulations, real-time analytics, and verified textbook examples.
 
-Inspired by DSA visualizers like [VisuAlgo](https://visualgo.net/en/), Darwin Labs brings evolutionary computing to life with full transport controls, chromosome-level diffing, gene pool heatmaps, diversity metrics, and mathematical validation.
-
 ---
 
 ## Features

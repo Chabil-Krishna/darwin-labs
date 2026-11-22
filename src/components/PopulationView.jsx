@@ -36,6 +36,9 @@ export default function PopulationView({ state, params }) {
           )}
         </div>
         <div className="flex items-center gap-4">
+          {(params.elitism || 0) > 0 && (
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-600" /> Elite</span>
+          )}
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-500" /> Selected Parent</span>
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-400" /> Offspring</span>
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> Mutated</span>
@@ -45,6 +48,7 @@ export default function PopulationView({ state, params }) {
       {/* Current Population */}
       <AnimatePresence mode="popLayout">
         {state.population.map((chr, i) => {
+          const isElite = (state.eliteIndices || []).includes(i);
           const spins = Array.isArray(state.selectionSpins?.[i])
             ? state.selectionSpins[i]
             : (state.selectionSpins?.[i] ? [state.selectionSpins[i]] : []);
@@ -55,11 +59,17 @@ export default function PopulationView({ state, params }) {
           const probPercent = (prob * 100).toFixed(1);
 
           let rowStyle = 'bg-orange-50/30 hover:bg-orange-50/70 border border-transparent';
-          let badge = null;
-          if (isSelected) {
+          if (isElite) {
+            rowStyle = 'bg-orange-100/70 border border-orange-400';
+          } else if (isSelected) {
             rowStyle = 'bg-amber-50 border border-amber-300';
+          }
+
+          const badges = [];
+          if (isElite) badges.push(<Badge key="elite" label="Elite" isElite />);
+          if (isSelected) {
             const badgeLabel = spinCount > 1 ? `Parent (×${spinCount})` : 'Parent';
-            badge = <Badge label={badgeLabel} isParent />;
+            badges.push(<Badge key="parent" label={badgeLabel} isParent />);
           }
 
           return (
@@ -87,7 +97,7 @@ export default function PopulationView({ state, params }) {
                   <FitnessBar value={state.fitnesses[i]} max={def.maxFitness(chrLen)} />
                 </>
               )}
-              {badge}
+              {badges}
               {isSelected && params.selection === 'tournament' && (
                 <span
                   title={spins
@@ -359,10 +369,11 @@ function FitnessBar({ value, max }) {
   );
 }
 
-function Badge({ label, isParent, isMutated }) {
+function Badge({ label, isElite, isParent, isMutated }) {
   let cls = 'bg-orange-100 text-orange-900 border border-orange-300';
-  if (isParent) cls = 'bg-amber-100 text-orange-900 border border-amber-300 font-bold';
-  if (isMutated) cls = 'bg-orange-200 text-orange-950 border border-orange-500 font-bold';
+  if (isElite) cls = 'bg-orange-600 text-white border border-orange-700 font-bold';
+  else if (isParent) cls = 'bg-amber-100 text-orange-900 border border-amber-300 font-bold';
+  else if (isMutated) cls = 'bg-orange-200 text-orange-950 border border-orange-500 font-bold';
 
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] ${cls} shrink-0`}>
