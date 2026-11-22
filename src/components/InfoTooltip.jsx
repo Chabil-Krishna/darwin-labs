@@ -47,16 +47,19 @@ export default function InfoTooltip({
           role="tooltip"
           className={`
             absolute z-50 ${positionClasses} ${alignClasses}
-            w-60 p-2.5 rounded-lg bg-white text-stone-800 text-[11px] font-normal leading-relaxed
-            border border-orange-300 shadow-xl shadow-orange-950/15 pointer-events-none text-left
+            w-64 max-w-[calc(100vw-2rem)] p-3 rounded-lg bg-white text-stone-800 text-[11px] font-normal leading-relaxed
+            whitespace-normal break-words box-border
+            border border-orange-300 shadow-xl shadow-orange-950/20 pointer-events-none text-left
           `}
         >
           {title && (
-            <span className="block font-bold text-orange-950 text-xs mb-1">
+            <span className="block font-bold text-orange-950 text-xs mb-1 whitespace-normal break-words">
               {title}
             </span>
           )}
-          <span>{text}</span>
+          <span className="block whitespace-normal break-words leading-relaxed text-stone-700">
+            {text}
+          </span>
 
           {/* Border-arrow pointing to the (i) badge */}
           {position === 'top' ? (
