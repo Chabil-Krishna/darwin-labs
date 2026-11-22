@@ -4,6 +4,7 @@ import {
   createRandomPopulation,
   evaluatePopulation,
   selectParent,
+  selectParentWithDetails,
   singlePointCrossover,
   mutateChromosome,
   computeDiversity,
@@ -31,6 +32,7 @@ const initialState = {
   phase: 'idle',
   history: { best: [], avg: [], worst: [], diversity: [] },
   selected: [],       // Array of [parentIdxA, parentIdxB]
+  selectionSpins: {}, // parentIdx -> { r, cumProb, prob }
   offspring: [],
   mutatedIndices: [],  // which offspring indices got mutated
   mutatedBitsMap: {},  // offspringIdx -> [bitPositions]
@@ -160,30 +162,65 @@ export default function useGAEngine() {
         const needed = p.popSize;
         const parentPairs = Math.ceil(needed / 2);
         const selected = [];
+        const selectionSpins = {};
+
+        const totalF = prev.fitnesses.reduce((a, b) => a + b, 0);
+        let cumSum = 0;
+        const probs = prev.fitnesses.map((f) => (totalF > 0 ? f / totalF : 0));
+        const cumProbs = probs.map((prob) => {
+          cumSum += prob;
+          return cumSum;
+        });
+        if (cumProbs.length > 0) cumProbs[cumProbs.length - 1] = 1.0;
 
         for (let i = 0; i < parentPairs; i++) {
-          const p1 = selectParent(prev.fitnesses, p.selection);
-          let p2 = selectParent(prev.fitnesses, p.selection);
+          const s1 = selectParentWithDetails(prev.fitnesses, p.selection);
+          let s2 = selectParentWithDetails(prev.fitnesses, p.selection);
           let tries = 0;
-          while (p2 === p1 && tries < 10) {
-            p2 = selectParent(prev.fitnesses, p.selection);
+          while (s2.idx === s1.idx && tries < 10) {
+            s2 = selectParentWithDetails(prev.fitnesses, p.selection);
             tries++;
           }
-          selected.push([p1, p2]);
+          selected.push([s1.idx, s2.idx]);
+
+          if (s1.r !== null) {
+            selectionSpins[s1.idx] = { r: s1.r, cumProb: s1.cumProb, prob: s1.prob };
+          }
+          if (s2.r !== null) {
+            selectionSpins[s2.idx] = { r: s2.r, cumProb: s2.cumProb, prob: s2.prob };
+          }
         }
 
         const methodNames = { roulette: 'Roulette Wheel', tournament: 'Tournament (k=3)', rank: 'Rank-Based' };
         const selectionDesc = {
-          roulette: 'Each chromosome gets a "roulette wheel" slice proportional to its fitness. Fitter individuals have bigger slices and are more likely to be chosen as parents.',
+          roulette: 'Each chromosome gets a slice proportional to its fitness. A random number r in [0, 1) is generated, and the chromosome with cumulative probability q >= r is chosen.',
           tournament: 'We randomly pick 3 individuals and the fittest one wins. This provides good selective pressure without computing total fitness.',
           rank: 'Chromosomes are ranked by fitness (1=worst, N=best). Selection probability is proportional to rank, preventing dominance by a single super-fit individual.',
         };
 
-        const totalF = prev.fitnesses.reduce((a, b) => a + b, 0);
+        const tableLines = prev.population.map((c, i) => {
+          const f = prev.fitnesses[i] ?? 0;
+          const pVal = ((probs[i] || 0) * 100).toFixed(1);
+          const qVal = ((cumProbs[i] || 0) * 100).toFixed(1);
+          return `  Chr ${i}: f(x) = ${f.toString().padEnd(4)} | p = ${pVal.padStart(5)}% | cum(q) = ${qVal.padStart(5)}%`;
+        });
+
+        const pairLines = selected.map((pair, i) => {
+          const sA = selectionSpins[pair[0]];
+          const sB = selectionSpins[pair[1]];
+          const descA = sA
+            ? `Chr ${pair[0]} (r = ${(sA.r * 100).toFixed(1)}% <= cum ${(sA.cumProb * 100).toFixed(1)}%)`
+            : `Chr ${pair[0]}`;
+          const descB = sB
+            ? `Chr ${pair[1]} (r = ${(sB.r * 100).toFixed(1)}% <= cum ${(sB.cumProb * 100).toFixed(1)}%)`
+            : `Chr ${pair[1]}`;
+          return `Pair ${i + 1}:\n  Parent A: ${descA}\n  Parent B: ${descB}`;
+        });
 
         return {
           ...prev,
           selected,
+          selectionSpins,
           phase: 'crossover',
           stepLog: {
             stepType: 'select',
@@ -191,13 +228,8 @@ export default function useGAEngine() {
             text: selectionDesc[p.selection] + ` Selected <b>${parentPairs}</b> parent pairs for mating. Total fitness Σf = <b>${totalF}</b>.`,
             details: [
               `Total Population Fitness (Σf) = ${totalF}`,
-              ...selected.map((pair, i) => {
-                const fA = prev.fitnesses[pair[0]] ?? 0;
-                const fB = prev.fitnesses[pair[1]] ?? 0;
-                const pA = totalF > 0 ? ((fA / totalF) * 100).toFixed(1) : '0.0';
-                const pB = totalF > 0 ? ((fB / totalF) * 100).toFixed(1) : '0.0';
-                return `Pair ${i + 1}:\n  Parent A (Chr ${pair[0]}): f = ${fA}, p = ${fA}/${totalF} = ${pA}%\n  Parent B (Chr ${pair[1]}): f = ${fB}, p = ${fB}/${totalF} = ${pB}%`;
-              }),
+              `Cumulative Probability Table:\n` + tableLines.join('\n'),
+              `Selection Rule: Pick random r in [0, 100%); select first individual where cumulative probability q >= r.\n\nSelected Pairs:\n` + pairLines.join('\n'),
             ].join('\n\n'),
             phaseColor: 'amber',
           },

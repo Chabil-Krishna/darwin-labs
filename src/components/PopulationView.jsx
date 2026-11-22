@@ -49,6 +49,7 @@ export default function PopulationView({ state, params }) {
           const fit = state.fitnesses[i] ?? 0;
           const prob = totalFitness > 0 ? (fit / totalFitness) : 0;
           const probPercent = (prob * 100).toFixed(1);
+          const spin = state.selectionSpins?.[i];
 
           let rowStyle = 'bg-orange-50/30 hover:bg-orange-50/70 border border-transparent';
           let badge = null;
@@ -81,12 +82,24 @@ export default function PopulationView({ state, params }) {
               {badge}
               {isSelected && totalFitness > 0 && (
                 <span
-                  title={`Roulette Wheel Selection Probability: p = f_i / Σf = ${fit} / ${totalFitness} = ${(prob * 100).toFixed(2)}%`}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono bg-amber-100 text-amber-950 border border-amber-300 shrink-0 font-medium cursor-help"
+                  title={
+                    spin
+                      ? `Roulette Selection: Random spin r = ${(spin.r * 100).toFixed(2)}%. Selected because cumulative probability q (${(spin.cumProb * 100).toFixed(2)}%) >= r (${(spin.r * 100).toFixed(2)}%). Individual p = ${fit}/${totalFitness} = ${probPercent}%.`
+                      : `Roulette Wheel Selection Probability: p = f_i / Σf = ${fit} / ${totalFitness} = ${(prob * 100).toFixed(2)}%`
+                  }
+                  className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-mono bg-amber-100 text-amber-950 border border-amber-300 shrink-0 font-medium cursor-help"
                 >
                   <span className="text-amber-700 font-sans font-semibold">p =</span>
                   <span className="font-semibold">{fit}/{totalFitness}</span>
                   <span className="font-bold text-orange-700">({probPercent}%)</span>
+                  {spin && (
+                    <>
+                      <span className="text-amber-400">|</span>
+                      <span className="text-amber-900 font-bold">
+                        cum {(spin.cumProb * 100).toFixed(1)}% &ge; r {(spin.r * 100).toFixed(1)}%
+                      </span>
+                    </>
+                  )}
                 </span>
               )}
             </motion.div>

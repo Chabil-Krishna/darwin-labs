@@ -76,16 +76,59 @@ export function evaluatePopulation(population, problemId, target) {
 }
 
 // ---- Selection ----
-export function rouletteSelect(fitnesses) {
+export function rouletteSelectWithDetails(fitnesses) {
   const total = fitnesses.reduce((a, b) => a + b, 0);
-  if (total === 0) return Math.floor(Math.random() * fitnesses.length);
-  const r = Math.random() * total;
-  let cum = 0;
-  for (let i = 0; i < fitnesses.length; i++) {
-    cum += fitnesses[i];
-    if (cum >= r) return i;
+  if (total === 0) {
+    const idx = Math.floor(Math.random() * fitnesses.length);
+    return {
+      idx,
+      r: Math.random(),
+      prob: 0,
+      cumProb: 0,
+      total: 0,
+      allProbs: fitnesses.map(() => 0),
+      allCumProbs: fitnesses.map(() => 0),
+    };
   }
-  return fitnesses.length - 1;
+
+  // 1. Selection probability for each chromosome: p_i = f_i / total
+  const allProbs = fitnesses.map((f) => f / total);
+
+  // 2. Cumulative probability: q_i = sum_{j=0}^i p_j
+  let cum = 0;
+  const allCumProbs = allProbs.map((p) => {
+    cum += p;
+    return cum;
+  });
+  // Ensure last cumulative probability is 1.0 (avoids float precision drift)
+  allCumProbs[allCumProbs.length - 1] = 1.0;
+
+  // 3. Generate random number r in [0, 1)
+  const r = Math.random();
+
+  // 4. Select the first chromosome where cumulative probability q_i >= r
+  let selectedIdx = allCumProbs.length - 1;
+  for (let i = 0; i < allCumProbs.length; i++) {
+    if (allCumProbs[i] >= r) {
+      selectedIdx = i;
+      break;
+    }
+  }
+
+  return {
+    idx: selectedIdx,
+    r,
+    prob: allProbs[selectedIdx],
+    cumProb: allCumProbs[selectedIdx],
+    prevCumProb: selectedIdx > 0 ? allCumProbs[selectedIdx - 1] : 0,
+    allProbs,
+    allCumProbs,
+    total,
+  };
+}
+
+export function rouletteSelect(fitnesses) {
+  return rouletteSelectWithDetails(fitnesses).idx;
 }
 
 export function tournamentSelect(fitnesses, k = 3) {
@@ -115,6 +158,18 @@ export function rankSelect(fitnesses) {
     if (cum >= r) return i;
   }
   return ranks.length - 1;
+}
+
+export function selectParentWithDetails(fitnesses, method) {
+  if (method === 'tournament') {
+    const idx = tournamentSelect(fitnesses);
+    return { idx, r: null, cumProb: null, prob: null, method: 'tournament' };
+  }
+  if (method === 'rank') {
+    const idx = rankSelect(fitnesses);
+    return { idx, r: null, cumProb: null, prob: null, method: 'rank' };
+  }
+  return { ...rouletteSelectWithDetails(fitnesses), method: 'roulette' };
 }
 
 export function selectParent(fitnesses, method) {
