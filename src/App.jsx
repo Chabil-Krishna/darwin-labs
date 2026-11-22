@@ -24,6 +24,7 @@ const TABS = [
 export default function App() {
   const {
     state, params, playing, speed, setSpeed,
+    timeRemaining, totalTime,
     step, play, pause, reset, updateParams,
   } = useGAEngine();
 
@@ -41,6 +42,8 @@ export default function App() {
           playing={playing}
           speed={speed}
           setSpeed={setSpeed}
+          timeRemaining={timeRemaining}
+          totalTime={totalTime}
           onPlay={play}
           onPause={pause}
           onStep={step}

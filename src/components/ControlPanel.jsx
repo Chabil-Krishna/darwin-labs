@@ -1,13 +1,20 @@
 import { PROBLEMS } from '../engine/ga';
 import {
   Play, Pause, SkipForward, RotateCcw,
-  Zap, Users, Ruler, Shuffle, Dna, Shield, Gauge, Target
+  Zap, Users, Ruler, Shuffle, Dna, Shield, Gauge, Target, Timer
 } from 'lucide-react';
 
-const SPEED_LABELS = { 1: 'Very Slow', 2: 'Slow', 3: 'Medium', 4: 'Fast', 5: 'Blazing' };
+const SPEED_LABELS = {
+  1: '10s Time-Lapse',
+  2: '5s Slow',
+  3: '2s Medium',
+  4: '0.7s Fast',
+  5: '0.15s Blazing',
+};
 
 export default function ControlPanel({
   params, updateParams, playing, speed, setSpeed,
+  timeRemaining, totalTime,
   onPlay, onPause, onStep, onReset, state,
 }) {
   const def = PROBLEMS[params.problem];
@@ -110,14 +117,73 @@ export default function ControlPanel({
         </div>
         <div className="mt-3">
           <div className="flex items-center justify-between text-xs mb-1">
-            <span className="text-text-muted flex items-center gap-1"><Gauge size={12} /> Speed</span>
-            <span className="font-bold text-text-primary">{SPEED_LABELS[speed]}</span>
+            <span className="text-text-muted flex items-center gap-1"><Gauge size={12} /> Step Interval</span>
+            <span className="font-bold text-dna-cyan">{SPEED_LABELS[speed]}</span>
           </div>
           <input type="range" min={1} max={5} value={speed} onChange={(e) => setSpeed(Number(e.target.value))}
             className="w-full accent-dna-blue h-1.5 rounded-full appearance-none bg-surface-500 cursor-pointer
             [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
             [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-dna-blue [&::-webkit-slider-thumb]:shadow-lg" />
+
+          {/* Quick Preset Buttons */}
+          <div className="flex gap-1.5 mt-2">
+            <button
+              type="button"
+              onClick={() => setSpeed(1)}
+              className={`flex-1 py-1 px-2 rounded text-[11px] font-bold border transition-all ${
+                speed === 1
+                  ? 'bg-dna-cyan/20 border-dna-cyan text-dna-cyan shadow-sm shadow-dna-cyan/20'
+                  : 'bg-surface-700/50 border-border text-text-muted hover:text-text-primary'
+              }`}
+            >
+              ⏱ 10s Time-Lapse
+            </button>
+            <button
+              type="button"
+              onClick={() => setSpeed(3)}
+              className={`py-1 px-2 rounded text-[11px] font-medium border transition-all ${
+                speed === 3
+                  ? 'bg-dna-blue/20 border-dna-blue text-dna-blue'
+                  : 'bg-surface-700/50 border-border text-text-muted hover:text-text-primary'
+              }`}
+            >
+              2s
+            </button>
+            <button
+              type="button"
+              onClick={() => setSpeed(5)}
+              className={`py-1 px-2 rounded text-[11px] font-medium border transition-all ${
+                speed === 5
+                  ? 'bg-dna-amber/20 border-dna-amber text-dna-amber'
+                  : 'bg-surface-700/50 border-border text-text-muted hover:text-text-primary'
+              }`}
+            >
+              Fast
+            </button>
+          </div>
         </div>
+
+        {/* 10s Time-Lapse Countdown Visualizer */}
+        {playing && (
+          <div className="mt-3 p-2.5 rounded-lg bg-surface-700/60 border border-dna-cyan/30 animate-in">
+            <div className="flex items-center justify-between text-xs mb-1.5">
+              <span className="text-dna-cyan font-semibold flex items-center gap-1.5">
+                <Timer size={13} className="text-dna-cyan" /> Next step in
+              </span>
+              <span className="font-mono font-extrabold text-dna-cyan text-sm">
+                {(Math.max(0, timeRemaining || 0) / 1000).toFixed(1)}s
+              </span>
+            </div>
+            <div className="w-full h-1.5 bg-surface-600 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-dna-cyan via-dna-blue to-dna-indigo transition-all duration-100 ease-linear rounded-full"
+                style={{
+                  width: `${Math.min(100, Math.max(0, (((totalTime || 10000) - (timeRemaining || 0)) / (totalTime || 10000)) * 100))}%`,
+                }}
+              />
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Stats */}
