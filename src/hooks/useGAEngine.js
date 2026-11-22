@@ -104,20 +104,19 @@ export default function useGAEngine() {
       // === IDLE → Initialize ===
       if (prev.phase === 'idle') {
         const population = createRandomPopulation(p.problem, p.popSize, chrLen, target);
-        const fitnesses = evaluatePopulation(population, p.problem, target);
-        const history = recordHistory(population, fitnesses, { best: [], avg: [], worst: [], diversity: [] });
 
         return {
           ...initialState,
           population,
-          fitnesses,
-          history,
+          fitnesses: [],
+          history: { best: [], avg: [], worst: [], diversity: [] },
           phase: 'evaluate',
           stepLog: {
             stepType: 'init',
             title: 'Step 1: Initialization',
-            text: `Created a random population of <b>${p.popSize}</b> chromosomes, each with <b>${chrLen}</b> genes. Each gene is randomly assigned. This is our starting "gene pool" — the raw material evolution will work with.`,
-            details: `Population size = ${p.popSize}\nChromosome length = ${chrLen}\nSearch space = ${problemDef.alleles.length}^${chrLen} = ${BigInt(problemDef.alleles.length) ** BigInt(chrLen)} possible solutions`,
+            text: `Created a random population of <b>${p.popSize}</b> chromosomes, each with <b>${chrLen}</b> genes. Each gene is randomly assigned. Chromosome fitness is not evaluated in this step; it will be evaluated next in Step 2: Fitness Evaluation.`,
+            details: `Population size = ${p.popSize}\nChromosome length = ${chrLen}\nSearch space = ${problemDef.alleles.length}^${chrLen} = ${BigInt(problemDef.alleles.length) ** BigInt(chrLen)} possible solutions\n\nInitial Chromosomes (unrated):\n` +
+              population.map((c, i) => `Chr ${i}: [${c.join('')}] → awaiting evaluation`).join('\n'),
             phaseColor: 'blue',
           },
         };
@@ -129,10 +128,12 @@ export default function useGAEngine() {
         const maxF = Math.max(...fitnesses);
         const avgF = (fitnesses.reduce((a, b) => a + b, 0) / fitnesses.length).toFixed(2);
         const converged = maxF >= problemDef.maxFitness(chrLen);
+        const history = recordHistory(prev.population, fitnesses, prev.history);
 
         return {
           ...prev,
           fitnesses,
+          history,
           selected: [],
           mutatedIndices: [],
           mutatedBitsMap: {},
@@ -147,7 +148,7 @@ export default function useGAEngine() {
               ? `Optimal chromosome found with maximum fitness of <b class="text-orange-600 font-bold">${maxF}</b>. The algorithm has successfully converged!`
               : `Each chromosome is scored by the fitness function. Best: <b class="text-orange-600 font-bold">${maxF}</b>, Average: <b>${avgF}</b>.`,
             details: prev.population
-              .map((c, i) => `Chr ${i}: [${c.join('')}] → fitness = ${fitnesses[i]}`)
+              .map((c, i) => `Chr ${i}: [${c.join('')}] → f(x) = ${fitnesses[i]}`)
               .join('\n'),
             phaseColor: 'emerald',
           },
@@ -296,32 +297,26 @@ export default function useGAEngine() {
       // === REPLACE ===
       if (prev.phase === 'replace') {
         const trimmedPop = [...prev.offspring].slice(0, p.popSize);
-        const fitnesses = evaluatePopulation(trimmedPop, p.problem, target);
         const generation = prev.generation + 1;
-        const history = recordHistory(trimmedPop, fitnesses, prev.history);
-        const maxF = Math.max(...fitnesses);
-        const converged = maxF >= problemDef.maxFitness(chrLen);
 
         return {
           ...prev,
           population: trimmedPop,
-          fitnesses,
+          fitnesses: [],
           generation,
-          history,
           selected: [],
           offspring: [],
           mutatedIndices: [],
           mutatedBitsMap: {},
           crossoverPoints: [],
-          phase: converged ? 'converged' : 'evaluate',
-          converged,
+          phase: 'evaluate',
+          converged: false,
           stepLog: {
-            stepType: converged ? 'converged' : 'replace',
-            title: converged ? `Convergence Achieved — Generation ${generation}` : `Step 6: Replacement — Generation ${generation}!`,
-            text: converged
-              ? `The new generation produced the optimal solution with maximum fitness <b class="text-orange-600 font-bold">${maxF}</b>! The algorithm has fully converged.`
-              : `The old population is replaced entirely by the <b>${prev.offspring.length}</b> new offspring. The cycle continues: Evaluate → Select → Crossover → Mutate → Replace.`,
-            details: `Generation ${generation}\nBest fitness: ${maxF}\nBest: [${trimmedPop[fitnesses.indexOf(maxF)].join('')}]`,
+            stepType: 'replace',
+            title: `Step 6: Replacement — Generation ${generation}!`,
+            text: `The old population is replaced entirely by the <b>${prev.offspring.length}</b> new offspring to form Generation ${generation}. The new generation will be evaluated in the next step.`,
+            details: `Generation ${generation}\nPopulation size: ${trimmedPop.length} candidate solutions.\n\nNew generation chromosomes:\n` +
+              trimmedPop.map((c, i) => `Chr ${i}: [${c.join('')}] → awaiting evaluation`).join('\n'),
             phaseColor: 'violet',
           },
         };

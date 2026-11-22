@@ -73,8 +73,9 @@ export default function PopulationView({ state, params }) {
                   x={parseInt(chr.join(''), 2)}
                 </span>
               )}
-              <span className="font-mono text-xs font-bold text-stone-800 min-w-[36px] text-right shrink-0">
-                {state.fitnesses[i] ?? '?'}
+              <span className="font-mono text-xs font-bold text-stone-800 shrink-0 whitespace-nowrap min-w-[68px] text-right">
+                <span className="text-orange-700 font-sans font-medium text-[11px] mr-1">f(x) =</span>
+                <span>{state.fitnesses[i] !== undefined ? state.fitnesses[i] : '—'}</span>
               </span>
               <FitnessBar value={state.fitnesses[i]} max={def.maxFitness(chrLen)} />
               {badge}
@@ -126,7 +127,10 @@ export default function PopulationView({ state, params }) {
                 >
                   <span className="text-[11px] text-stone-500 font-mono w-5 text-right shrink-0">O{i}</span>
                   <ChromosomeDisplay chr={chr} problem={params.problem} target={target} crossoverPoint={cp} mutatedBits={mutBits} />
-                  <span className="font-mono text-xs font-bold text-stone-800 min-w-[36px] text-right shrink-0">{fitness}</span>
+                  <span className="font-mono text-xs font-bold text-stone-800 shrink-0 whitespace-nowrap min-w-[68px] text-right">
+                    <span className="text-orange-700 font-sans font-medium text-[11px] mr-1">f(x) =</span>
+                    <span>{fitness}</span>
+                  </span>
                   <FitnessBar value={fitness} max={def.maxFitness(chrLen)} />
                   {cp > 0 && (
                     <span className="text-[10px] text-orange-600 font-bold shrink-0">cut @{cp}</span>
@@ -184,7 +188,11 @@ function ChromosomeDisplay({ chr, problem, target, crossoverPoint, mutatedBits =
 }
 
 function FitnessBar({ value, max }) {
-  if (value === undefined || value === null) return null;
+  if (value === undefined || value === null) {
+    return (
+      <div className="w-16 h-1.5 rounded-full bg-orange-100/60 border border-orange-200/50 overflow-hidden shrink-0" />
+    );
+  }
   const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
   return (
     <div className="w-16 h-1.5 rounded-full bg-orange-100 border border-orange-200 overflow-hidden shrink-0">
