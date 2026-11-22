@@ -45,7 +45,7 @@ export default function PopulationView({ state, params }) {
           let badge = null;
           if (isSelected) {
             rowStyle = 'bg-amber-50 border border-amber-300';
-            badge = <Badge label="⟡ Parent" isParent />;
+            badge = <Badge label="Parent" isParent />;
           }
 
           return (
@@ -90,7 +90,7 @@ export default function PopulationView({ state, params }) {
               let badge = null;
               if (isMutated) {
                 rowStyle = 'bg-orange-100 border border-orange-400';
-                badge = <Badge label="⚡ Mutated" isMutated />;
+                badge = <Badge label="Mutated" isMutated />;
               }
 
               const fitness = params.problem === 'targetstr'
@@ -110,7 +110,7 @@ export default function PopulationView({ state, params }) {
                   <span className="font-mono text-xs font-bold text-stone-800 min-w-[36px] text-right shrink-0">{fitness}</span>
                   <FitnessBar value={fitness} max={def.maxFitness(chrLen)} />
                   {cp > 0 && (
-                    <span className="text-[10px] text-orange-600 font-bold shrink-0">✂ @{cp}</span>
+                    <span className="text-[10px] text-orange-600 font-bold shrink-0">cut @{cp}</span>
                   )}
                   {badge}
                 </motion.div>

@@ -181,13 +181,14 @@ export default function ControlPanel({
             <button
               type="button"
               onClick={() => setSpeed(1)}
-              className={`flex-1 py-1.5 px-2 rounded-md text-[11px] font-bold border transition-all cursor-pointer ${
+              className={`flex-1 py-1.5 px-2 rounded-md text-[11px] font-bold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
                 speed === 1
                   ? 'bg-orange-500 border-orange-500 text-white shadow-xs'
                   : 'bg-white border-orange-200 text-orange-800 hover:bg-orange-50'
               }`}
             >
-              ⏱ 10s Time-Lapse
+              <Timer size={12} className="shrink-0" />
+              10s Time-Lapse
             </button>
             <button
               type="button"

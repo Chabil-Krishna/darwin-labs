@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { runGoldbergExample } from '../engine/ga';
 import InfoTooltip from './InfoTooltip';
-import { Play, CheckCircle2 } from 'lucide-react';
+import { Play, CheckCircle2, BookOpen, RotateCcw, Check } from 'lucide-react';
 
 export default function TextbookCheck() {
   const [result, setResult] = useState(null);
@@ -11,7 +11,7 @@ export default function TextbookCheck() {
   if (!result) {
     return (
       <div className="text-center py-12 space-y-4">
-        <div className="text-4xl">📖</div>
+        <BookOpen size={40} className="text-orange-500 mx-auto" />
         <h4 className="text-lg font-bold text-stone-900">Textbook Verification</h4>
         <p className="text-sm text-stone-600 max-w-md mx-auto leading-relaxed">
           Run a hand-calculated example from <b>Goldberg's "Genetic Algorithms in Search,
@@ -32,7 +32,7 @@ export default function TextbookCheck() {
       {/* Header */}
       <div className="p-3.5 rounded-lg bg-orange-50 border border-orange-200">
         <h4 className="font-bold text-orange-900 mb-1 flex items-center gap-1.5">
-          <span>📖 Goldberg's f(x) = x² Example (1989)</span>
+          <span>Goldberg's f(x) = x² Example (1989)</span>
           <InfoTooltip
             title="Textbook Column"
             text="Interactive step-by-step verification of David E. Goldberg's classic (1989) f(x) = x² hand calculation with verified arithmetic at every step."
@@ -83,8 +83,9 @@ export default function TextbookCheck() {
               Chr {i + 1}: x = {c.binary.split('').map((b, j) => `${b}·${2 ** (4 - j)}`).join(' + ')} = {c.x} → f({c.x}) = {c.fitness}
             </div>
           ))}
-          <div className="mt-1 font-bold text-orange-700">
-            Total = {result.initialPop.map(c => c.fitness).join(' + ')} = {result.totalFitness} ✓
+          <div className="mt-1 font-bold text-orange-700 flex items-center">
+            Total = {result.initialPop.map(c => c.fitness).join(' + ')} = {result.totalFitness}
+            <Check size={13} className="text-orange-600 ml-1.5 inline" />
           </div>
         </VerifyBox>
       </Section>
@@ -123,10 +124,18 @@ export default function TextbookCheck() {
             <div>P{cx.parent1.idx + 1}: {renderCrossover(cx.parent1.chr, cx.point)}<span className="text-stone-500 ml-2 font-sans">(x={cx.parent1.x})</span></div>
             <div>P{cx.parent2.idx + 1}: {renderCrossover(cx.parent2.chr, cx.point)}<span className="text-stone-500 ml-2 font-sans">(x={cx.parent2.x})</span></div>
             <div className="border-t border-orange-200 pt-1.5 mt-1">
-              C{i * 2 + 1}: {renderCrossover(cx.child1.chr, cx.point)}<span className="text-orange-600 font-bold ml-2 font-sans">x={cx.child1.x}, f(x)={cx.child1.fitness} ✓</span>
+              C{i * 2 + 1}: {renderCrossover(cx.child1.chr, cx.point)}
+              <span className="text-orange-600 font-bold ml-2 font-sans inline-flex items-center gap-1">
+                x={cx.child1.x}, f(x)={cx.child1.fitness}
+                <Check size={12} className="text-orange-600 inline" />
+              </span>
             </div>
             <div>
-              C{i * 2 + 2}: {renderCrossover(cx.child2.chr, cx.point)}<span className="text-orange-600 font-bold ml-2 font-sans">x={cx.child2.x}, f(x)={cx.child2.fitness} ✓</span>
+              C{i * 2 + 2}: {renderCrossover(cx.child2.chr, cx.point)}
+              <span className="text-orange-600 font-bold ml-2 font-sans inline-flex items-center gap-1">
+                x={cx.child2.x}, f(x)={cx.child2.fitness}
+                <Check size={12} className="text-orange-600 inline" />
+              </span>
             </div>
           </div>
         ))}
@@ -164,12 +173,12 @@ export default function TextbookCheck() {
           <CheckCircle2 size={18} className="text-orange-600" />
           <span className="font-bold text-orange-800">Verification Summary</span>
         </div>
-        <ul className="text-xs text-stone-700 space-y-1 list-disc list-inside">
-          <li>Old average fitness: {result.oldAvg.toFixed(1)} → New average: {result.newAvg.toFixed(1)}</li>
-          <li>Binary decoding verified for all 8 chromosomes ✓</li>
-          <li>Roulette probabilities sum to 100% ✓</li>
-          <li>Crossover produces correct gene combinations ✓</li>
-          <li>All f(x) = x² computations match hand calculation ✓</li>
+        <ul className="text-xs text-stone-700 space-y-1.5">
+          <li className="flex items-center gap-1.5"><Check size={13} className="text-orange-600 shrink-0" /> Old average fitness: {result.oldAvg.toFixed(1)} → New average: {result.newAvg.toFixed(1)}</li>
+          <li className="flex items-center gap-1.5"><Check size={13} className="text-orange-600 shrink-0" /> Binary decoding verified for all 8 chromosomes</li>
+          <li className="flex items-center gap-1.5"><Check size={13} className="text-orange-600 shrink-0" /> Roulette probabilities sum to 100%</li>
+          <li className="flex items-center gap-1.5"><Check size={13} className="text-orange-600 shrink-0" /> Crossover produces correct gene combinations</li>
+          <li className="flex items-center gap-1.5"><Check size={13} className="text-orange-600 shrink-0" /> All f(x) = x² computations match hand calculation</li>
         </ul>
       </div>
 
@@ -177,7 +186,7 @@ export default function TextbookCheck() {
         onClick={run}
         className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white border border-orange-300 text-orange-700 hover:bg-orange-50 transition-all cursor-pointer"
       >
-        ↻ Re-run
+        <RotateCcw size={12} /> Re-run
       </button>
     </div>
   );
@@ -195,7 +204,10 @@ function Section({ title, children }) {
 function VerifyBox({ children }) {
   return (
     <div className="mt-2.5 p-3 rounded-lg bg-orange-50/50 border border-orange-200 font-mono text-[11px] text-stone-700 leading-relaxed">
-      <span className="text-orange-700 font-bold">✓ Hand calculation check:</span>
+      <span className="text-orange-700 font-bold flex items-center gap-1">
+        <Check size={13} className="text-orange-600" />
+        Hand calculation check:
+      </span>
       <div className="mt-1 space-y-0.5">{children}</div>
     </div>
   );

@@ -1,9 +1,11 @@
+import { Dna } from 'lucide-react';
+
 export default function ExplanationPanel({ stepLog }) {
   if (!stepLog) {
     return (
       <div className="bg-white border border-orange-200 rounded-xl p-5 border-l-4 border-l-orange-500 shadow-sm shadow-orange-100/50">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-2xl">📘</span>
+          <Dna size={22} className="text-orange-600" />
           <h3 className="text-base font-bold text-stone-900">Welcome to Darwin Labs</h3>
         </div>
         <p className="text-sm text-stone-700 leading-relaxed">

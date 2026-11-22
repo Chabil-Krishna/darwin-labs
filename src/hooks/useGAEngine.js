@@ -125,7 +125,7 @@ export default function useGAEngine() {
           stepLog: {
             icon: '📊',
             title: 'Step 2: Fitness Evaluation',
-            text: `Each chromosome is scored by the fitness function. Best: <b class="text-orange-600 font-bold">${maxF}</b>, Average: <b>${avgF}</b>.${converged ? ' <b class="text-orange-600 font-bold">🎉 Optimal solution found!</b>' : ''}`,
+            text: `Each chromosome is scored by the fitness function. Best: <b class="text-orange-600 font-bold">${maxF}</b>, Average: <b>${avgF}</b>.${converged ? ' <b class="text-orange-600 font-bold">Optimal solution found!</b>' : ''}`,
             details: prev.population
               .map((c, i) => `Chr ${i}: [${c.join('')}] → fitness = ${fitnesses[i]}`)
               .join('\n'),
@@ -289,7 +289,7 @@ export default function useGAEngine() {
           stepLog: {
             icon: '🔄',
             title: `Step 6: Replacement — Generation ${generation}!`,
-            text: `The old population is replaced entirely by the <b>${prev.offspring.length}</b> new offspring. ${converged ? '<b class="text-orange-600 font-bold">🎉 Optimal solution found! The algorithm converged.</b>' : 'The cycle continues: Evaluate → Select → Crossover → Mutate → Replace.'}`,
+            text: `The old population is replaced entirely by the <b>${prev.offspring.length}</b> new offspring. ${converged ? '<b class="text-orange-600 font-bold">Optimal solution found! The algorithm converged.</b>' : 'The cycle continues: Evaluate → Select → Crossover → Mutate → Replace.'}`,
             details: `Generation ${generation}\nBest fitness: ${maxF}\nBest: [${trimmedPop[fitnesses.indexOf(maxF)].join('')}]`,
             phaseColor: 'violet',
           },
