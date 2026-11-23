@@ -2,6 +2,8 @@
 
 A browser-based educational and experimentation platform for understanding and mastering **Genetic Algorithms (GA)** through step-by-step interactive simulations, real-time analytics, and verified textbook examples.
 
+**Live Deployment:** [darwin-labs.vercel.app](https://darwin-labs.vercel.app/)
+
 ---
 
 ## Features
@@ -21,10 +23,10 @@ A browser-based educational and experimentation platform for understanding and m
 - **Crossover Rate** (0.00 to 1.00)
 - **Mutation Rate** (0.00 to 0.50)
 - **Selection Operator**: Roulette Wheel (Fitness Proportionate) or Tournament (k=2)
-- **Generational Replacement**: Standard generational replacement conforming to core curriculum syllabi.
+- **Elitism**: Configurable elite count (0 to popSize/2) to preserve top-performing solutions unmodified across generations.
 
 ### 4. Interactive Visualizations and Analytics
-- **Population View**: Detailed gene-by-gene layout, parent highlights, crossover cut points, and mutation indicators.
+- **Population View**: Detailed gene-by-gene layout, elite individual badges, parent highlights, crossover cut points, and mutation indicators.
 - **Fitness Chart**: High-resolution area and line chart tracking Best, Average, and Worst fitness across generations using Recharts.
 - **Gene Pool Heatmap**: Real-time allele frequency distribution across all chromosome positions (loci) to inspect genetic drift and locus locking.
 - **Diversity Metric**: Tracking unique population genotypes to observe search-space exploration vs. premature convergence.
